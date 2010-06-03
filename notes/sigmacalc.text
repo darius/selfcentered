@@ -1,0 +1,39 @@
+> > The sigma-calculus is fairly close to this, but instead of having object
+> > creation from nothing and method calls with arguments, it has object
+> > creation from nothing, method calls without arguments, and inheritance.
+>
+> Makes me wonder, what if you dropped inheritance from that? Could you
+> still have a nice language? I don't remember Bicicleta/sigma calculus
+> that well offhand.
+
+Without inheritance or arguments or something, there's no way to run one
+piece of code on two different sets of values. So you lose the ability
+to remove duplication from the code.
+
+Here's a quick summary.
+
+A term in the sigma-calculus or "object calculus" is one of:
+
+    x                  -- a variable
+    t.l                -- a call to method l
+    t.l <- m           -- an inheritance expression overriding l
+    [l0=m0, l1=m1,...] -- an object
+
+A method m, which is not a term, has the syntax sigma(x)t, with the
+self-variable x and the body t. Method bodies are lexical closures in
+the usual way.
+
+t.l evaluates to the body of the named method, with its self-variable
+(the one in the parens) replaced by the object denoted by t, in a way
+exactly analogous to lambda-calculus beta-reduction.
+
+t.l <- m evaluates to an object identical to that denoted by t, but with
+the method named l replaced with m.
+
+So, if you add arithmetic, you can write (\x.x+1)3 as
+([val=sigma(x)x.arg+1, arg=sigma(x)0].arg <- 3).val.
+
+Bicicleta consists of a moderate amount of syntactic sugar on top of
+this, plus removing the restriction of only being able to override
+methods that already exist. In Bicicleta, you'd write that expression as
+{x: val=x.arg+1}{arg=3}.val or, more likely, {x: '()'=x.arg1+1}(3).
