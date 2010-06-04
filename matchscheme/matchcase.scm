@@ -26,7 +26,9 @@
                             (,cdr-pat ,then-exp)
                             (_ ,else-exp)))
                 (_ ,else-exp))
-              ,else-exp))))
+              ,else-exp))
+        (literal
+         `(if (eqv? ,subject ',literal) ,then-exp ,else-exp))))
 
     `(let ((,subject ,subject-exp))
        ,(foldr expand-clause '(%match-error) clauses))))
