@@ -16,14 +16,12 @@
       (env-lookup r e)
       (case (car e)
         ((quote)
-         ;; (ELABORATE could do the wrap, but that'd make elaborated
-         ;; expressions less readable.)
-         (wrap (cadr e)))
+         (cadr e))
         ((lambda)
-         (make-object (lambda (r . arguments)
-                        (evaluate (caddr e)
-                                  (env-extend r (cadr e) arguments)))
-                      r))
+         (make-proc (lambda (r arguments)
+                      (evaluate (caddr e)
+                                (env-extend r (cadr e) arguments)))
+                    r))
         ((letrec)
          ;; Specified to evaluate left-to-right with a definite
          ;; 'uninitialized' value.
@@ -55,135 +53,74 @@
                          (set-car! (cdr pair) value)))
         (else (error "Can't happen" v))))
 
-(define (make-object script datum)
-  (list 'object script datum))
+(define (make-proc script r)
+  (vector proc-tag script r))
 
-(define object.script cadr)
-(define object.datum caddr)
+(define (proc? x)
+  (and (vector? x) (eq? (vector-ref x 0) proc-tag)))
+
+(define (call-proc proc arguments)
+  ((vector-ref proc 1) (vector-ref proc 2) arguments))
+
+(define proc-tag (list '<proc>))
+
+(define primitive? procedure?)
 
 (define (call object arguments)
-  (assert (eq? (car object) 'object) "Non-object" object)
-  (apply (object.script object) (object.datum object) arguments))
+  (cond ((boolean? object)
+         (call (if object (car arguments) (cadr arguments)) '()))
+        ((primitive? object)
+         (apply object arguments))
+        ((proc? object)
+         (call-proc object arguments))
+        (else (error "Non-procedure" object))))
 
-(define (wrap x)
-  ;; TODO: we also need some I/O primitives
-  (cond ((boolean? x) (make-object boolean-script x))
-        ((integer? x) (make-object fixnum-script x))
-        ((symbol? x) (make-object symbol-script x))
-        ((null? x) (make-object nil-script '()))
-        ((pair? x) (make-object pair-script (cons (wrap (car x))
-                                                  (wrap (cdr x)))))
-        ((vector? x) (make-object vector-script (vector-map wrap x)))
-        (else (error "Unknown primitive type" x))))
+(define uninitialized (vector '*uninitialized*))
 
-(define (vector-map f vec)
-  (list->vector (map f (vector->list vec))))
-
-(define (unwrap script x)
-  (if (is-a? script x)
-      (object.datum x)
-      (error "Bad argument type" x)))
-
-(define (is-a? script x)
-  (eq? (object.script x) script))
-
-(define (make-primitive-script)
-  (lambda (me . arguments)
-    (error "Can't call a primitive" me)))
-
-(define uninitialized (make-object (make-primitive-script)
-                                   '*uninitialized*))
-
-
-(define (boolean-script me if-true if-false)
-  (call (if me if-true if-false) '()))
-
-(define fixnum-script (make-primitive-script))
-(define symbol-script (make-primitive-script))
-(define nil-script    (make-primitive-script))
-(define pair-script   (make-primitive-script))
-;; NB for a compiler all we badly need is a mutable box type, not full vectors
-(define vector-script (make-primitive-script))
-
-(define prim-%true?
-  (make-object (lambda (me x)
-                 (wrap (not (and (is-a? boolean-script x)
-                                 (eq? (object.datum x) #f)))))
-               '<cons>))
-
-(define prim-cons
-  (make-object (lambda (me x y) (make-object pair-script (cons x y)))
-               '<cons>))
-
-(define prim-eq?
-  (make-object (lambda (me x y)
-                 (wrap (and (eq? (object.script x) (object.script y))
-                            (eqv? (object.datum x) (object.datum y)))))
-               '<eq?>))
-
-(define prim-+
-  (make-object (lambda (me x y)
-                 (wrap (+ (unwrap fixnum-script x)
-                          (unwrap fixnum-script y))))
-               '<+>))
-
-(define prim--
-  (make-object (lambda (me x y)
-                 (wrap (- (unwrap fixnum-script x)
-                          (unwrap fixnum-script y))))
-               '<->))
-
-(define prim-*
-  (make-object (lambda (me x y)
-                 (wrap (* (unwrap fixnum-script x)
-                          (unwrap fixnum-script y))))
-               '<*>))
-
-(define prim-car
-  (make-object (lambda (me x)
-                 (car (unwrap pair-script x)))
-               '<car>))
-
-(define prim-cdr
-  (make-object (lambda (me x)
-                 (cdr (unwrap pair-script x)))
-               '<cdr>))
-
-(define prim-symbol?
-  (make-object (lambda (me x)
-                 (wrap (is-a? symbol-script x)))
-               '<car>))
+(define (%true? x)
+  (not (not x)))
 
 (define the-global-env
-  `((%true? ,prim-%true?)
-    (cons ,prim-cons)
-    (eq? ,prim-eq?)
-    (+ ,prim-+)
-    (- ,prim--)
-    (* ,prim-*)
-    (car ,prim-car)
-    (cdr ,prim-cdr)
-    (symbol? ,prim-symbol?)
+  `((uninitialized ,uninitialized)
+    (%true?      ,%true?)
+    (cons        ,cons)
+    (pair?       ,pair?)
+    (eq?         ,eqv?)
+    (+           ,+)
+    (-           ,-)
+    (*           ,*)
+    (car         ,car)
+    (cdr         ,cdr)
+    (symbol?     ,symbol?)
+    (make-vector ,make-vector)          ;XXX should distinguish procs
+    (vector-ref  ,vector-ref)
+    (vector-set! ,vector-set!)
+    ;; For now:
+    (error       ,error)
+    (elaborate   ,elaborate)
+    (read        ,read)
+    (write       ,write)
+    (newline     ,newline)
     ))
 
 
 (should= (interpret '42)
-         (wrap 42))
+         42)
 (should= (interpret 'cons)
-         prim-cons)
+         cons)
 (should= (interpret '(- 5 3))
-         (wrap 2))
+         2)
 (should= (interpret '(car (cdr '(hello world))))
-         (wrap 'world))
+         'world)
 (should= (interpret '((lambda (x) x)
                       '55))
-         (wrap 55))
+         55)
 (should= (interpret '(let ((x (eq? 4 (+ 2 2))))
                        x))
-         (wrap #t))
+         #t)
 (should= (interpret '(local ((define (fact n)
                                (if (eq? n 0)
                                    1
                                    (* n (fact (- n 1))))))
                        (fact 5)))
-         (wrap 120))
+         120)
