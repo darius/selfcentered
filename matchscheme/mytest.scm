@@ -14,7 +14,7 @@
 	     (newline)
 	     #f)
 	    (else #t)))
-     (interpret expr))))
+     (interpreter-to-test expr))))
 
 (test '(quote a) '(quote 'a))
 
