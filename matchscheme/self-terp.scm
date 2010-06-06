@@ -13,7 +13,7 @@
        datum)
       (('lambda vs body)
        (lambda (arguments)
-         (evaluate body (env-extend r vs arguments) r)))
+         (evaluate body (env-extend r vs arguments))))
       (('letrec defns body)
        (let ((new-r (env-extend-promises r (map car defns))))
          (for-each (lambda (defn)
@@ -31,7 +31,8 @@
     (box-get (cdr (assq v r))))
 
   (define (env-extend r vs values)
-    (append (map2 cons vs values) r))
+    (append (map2 (lambda (v value) (cons v (make-box value))) vs values)
+            r))
 
   (define (env-extend-promises r vs)
     (env-extend r vs (map (lambda (_) uninitialized) vs)))
