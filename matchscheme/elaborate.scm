@@ -33,9 +33,9 @@
             (let ((test (cadr e))
                   (if-true (caddr e))
                   (if-false (if (null? (cdddr e)) #f (cadddr e))))
-              (elaborate `((%true? ,test)
-                           (lambda () ,if-false)
-                           (lambda () ,if-true)))))
+              (elaborate `(%unless ,test
+                                   (lambda () ,if-false)
+                                   (lambda () ,if-true)))))
            ((cond)
             ;; Adapted from uts.scm
             (elaborate
@@ -176,7 +176,7 @@
            (write x)
            (lambda () (lambda (y) (+ x y)))))
 (should= (elaborate '(begin (if x y z)))
-         '((%true? x) (lambda () z) (lambda () y)))
+         '(%unless x (lambda () z) (lambda () y)))
 (should= (elaborate '(lambda ()
                        (local ((define (for-each f xs)
                                  (if (null? xs)
@@ -187,10 +187,10 @@
          '(lambda ()
             (letrec ((for-each
                       (lambda (f xs)
-                        ((%true? (null? xs))
-                         (lambda ()
-                           ((lambda (v thunk) (thunk))
-                            (f (car xs))
-                            (lambda () (for-each f (cdr xs)))))
-                         (lambda () '())))))
+                        (%unless (null? xs)
+                                 (lambda ()
+                                   ((lambda (v thunk) (thunk))
+                                    (f (car xs))
+                                    (lambda () (for-each f (cdr xs)))))
+                                 (lambda () '())))))
               for-each)))

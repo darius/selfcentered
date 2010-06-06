@@ -24,6 +24,8 @@
 
 (test 8 '((lambda (x) (+ x x)) 4))
 
+(test 7 '(if #f 5 7))
+
 (test 12 '((if #f + *) 3 4))
 
 (test 3 '(let ((reverse-subtract

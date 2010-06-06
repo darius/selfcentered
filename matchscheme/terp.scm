@@ -12,17 +12,15 @@
   (evaluate (elaborate e) the-global-env))
 
 (define (evaluate e r)
-;  (pp e)
   (if (symbol? e)
       (env-lookup r e)
       (case (car e)
         ((quote)
          (cadr e))
         ((lambda)
-         (make-proc (lambda (r arguments)
-                      (evaluate (caddr e)
-                                (env-extend r (cadr e) arguments)))
-                    r))
+         (lambda arguments
+           (evaluate (caddr e)
+                     (env-extend r (cadr e) arguments))))
         ((letrec)
          ;; Specified to evaluate left-to-right with a definite
          ;; 'uninitialized' value.
@@ -34,9 +32,9 @@
                      (cadr e))
            (evaluate (caddr e) new-r)))
         (else
-         (call (evaluate (car e) r)
-               (map (lambda (operand) (evaluate operand r))
-                    (cdr e)))))))
+         (apply (evaluate (car e) r)
+                (map (lambda (operand) (evaluate operand r))
+                     (cdr e)))))))
 
 (define (env-lookup r v)
   (cond ((assq v r) => cadr)
@@ -54,36 +52,15 @@
                          (set-car! (cdr pair) value)))
         (else (error "Can't happen" v))))
 
-(define (make-proc script r)
-  (vector proc-tag script r))
-
-(define (proc? x)
-  (and (vector? x) (eq? (vector-ref x 0) proc-tag)))
-
-(define (call-proc proc arguments)
-  ((vector-ref proc 1) (vector-ref proc 2) arguments))
-
-(define proc-tag (list '<proc>))
-
-(define primitive? procedure?)
-
-(define (call object arguments)
-  (cond ((boolean? object)
-         (call (if object (cadr arguments) (car arguments)) '()))
-        ((primitive? object)
-         (apply object arguments))
-        ((proc? object)
-         (call-proc object arguments))
-        (else (error "Non-procedure" object))))
-
 (define uninitialized (vector '*uninitialized*))
 
-(define (prim-%true? x)
-  (not (not x)))
+(define (%unless test if-no if-yes)
+  (if test (if-yes) (if-no)))
 
 (define the-global-env
   `((uninitialized ,uninitialized)
-    (%true?      ,prim-%true?)
+    (%unless     ,%unless)
+    (boolean?    ,boolean?)
     (cons        ,cons)
     (pair?       ,pair?)
     (eq?         ,eqv?)

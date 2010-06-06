@@ -38,7 +38,7 @@
     (env-extend r vs (map (lambda (_) uninitialized) vs)))
 
   (define (env-resolve! r v value)
-    (let ((box (env-lookup r v)))
+    (let ((box (cdr (assq v r))))
       (assert (eq? (box-get box) uninitialized))
       (box-set! box value)))
 
@@ -54,7 +54,10 @@
   (define (the-global-env)
     (map (lambda (pair) (cons (car pair) (make-box (cadr pair))))
          `((uninitialized ,uninitialized)
-           (%true?      ,(lambda (args) (%true? (car args))))
+           (%unless     ,(lambda (args) (if (car args)
+                                            ((caddr args) '())
+                                            ((cadr args) '()))))
+           (boolean?    ,(lambda (args) (boolean? (car args))))
            (cons        ,(lambda (args) (cons (car args) (cadr args))))
            (pair?       ,(lambda (args) (pair? (car args))))
            (eq?         ,(lambda (args) (eq? (car args) (cadr args))))
