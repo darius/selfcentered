@@ -78,12 +78,12 @@
 
 (define uninitialized (vector '*uninitialized*))
 
-(define (%true? x)
+(define (prim-%true? x)
   (not (not x)))
 
 (define the-global-env
   `((uninitialized ,uninitialized)
-    (%true?      ,%true?)
+    (%true?      ,prim-%true?)
     (cons        ,cons)
     (pair?       ,pair?)
     (eq?         ,eqv?)

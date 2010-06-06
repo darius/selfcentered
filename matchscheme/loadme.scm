@@ -1,6 +1,11 @@
 (load "elaborate.scm")
 (load "terp.scm")
 
+;; So we can run the output of ELABORATE in the underlying Scheme system:
+(define (%true? x)
+  (lambda (if-no if-yes)
+    (if x (if-yes) (if-no))))
+
 
 ;; Simple tests of terp.scm:
 
