@@ -18,9 +18,13 @@
 
 (test '(quote a) '(quote 'a))
 
-(test 12 '((if #f + *) 3 4))
+(test 2 '(- 5 3))
+
+(test 42 '((lambda () 42)))
 
 (test 8 '((lambda (x) (+ x x)) 4))
+
+(test 12 '((if #f + *) 3 4))
 
 (test 3 '(let ((reverse-subtract
                 (lambda (x y) (- y x))))
