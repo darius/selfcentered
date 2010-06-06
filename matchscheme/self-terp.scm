@@ -60,6 +60,7 @@
            (+           ,(lambda (args) (+ (car args) (cadr args))))
            (-           ,(lambda (args) (- (car args) (cadr args))))
            (*           ,(lambda (args) (* (car args) (cadr args))))
+           (<           ,(lambda (args) (< (car args) (cadr args))))
            (car         ,(lambda (args) (car (car args))))
            (cdr         ,(lambda (args) (cdr (car args))))
            (symbol?     ,(lambda (args) (symbol? (car args))))

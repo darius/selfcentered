@@ -12,6 +12,7 @@
   (evaluate (elaborate e) the-global-env))
 
 (define (evaluate e r)
+;  (pp e)
   (if (symbol? e)
       (env-lookup r e)
       (case (car e)
@@ -68,7 +69,7 @@
 
 (define (call object arguments)
   (cond ((boolean? object)
-         (call (if object (car arguments) (cadr arguments)) '()))
+         (call (if object (cadr arguments) (car arguments)) '()))
         ((primitive? object)
          (apply object arguments))
         ((proc? object)
@@ -89,6 +90,7 @@
     (+           ,+)
     (-           ,-)
     (*           ,*)
+    (<           ,<)
     (car         ,car)
     (cdr         ,cdr)
     (symbol?     ,symbol?)
