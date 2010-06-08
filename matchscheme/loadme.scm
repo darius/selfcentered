@@ -1,4 +1,19 @@
+;; Helpers
+
+(define (assert ok? plaint culprit)
+  (if (not ok?)
+      (error plaint culprit)
+      'fuck-off-mzscheme))
+
+(define (should= x expected)
+  (assert (equal? x expected) "Expected" expected))
+
+
+;; The language implementation
+
 (load "elaborate.scm")
+(load "test-elaborate.scm")
+
 (load "terp.scm")
 
 
