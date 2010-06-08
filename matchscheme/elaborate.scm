@@ -64,12 +64,11 @@
             ;; Adapted from uts.scm
             (elaborate
              (let ((rands (cdr e)))
-               (case (length rands)
-                 ((0) #f)
-                 ((1) (car rands))
-                 (else (let ((head (gensym)))
-                         `(let ((,head ,(car rands)))
-                            (if ,head ,head (or . ,(cdr rands))))))))))
+               (cond ((null? rands) #f)
+                     ((null? (cdr rands)) (car rands))
+                     (else (let ((head (gensym)))
+                             `(let ((,head ,(car rands)))
+                                (if ,head ,head (or . ,(cdr rands))))))))))
            ((mcase)
             (elaborate (expand-mcase (gensym) (cadr e) (cddr e))))
            ((quasiquote)
@@ -86,12 +85,10 @@
         (else x)))
 
 (define (expand-quasiquote e)
-  (if (not (pair? e))
-      `',e
-      (case (car e)
-        ((unquote) (cadr e))
+  (cond ((not (pair? e)) `',e)
+        ((eq? (car e) 'unquote) (cadr e))
         (else `(cons ,(expand-quasiquote (car e))
-                     ,(expand-quasiquote (cdr e)))))))
+                     ,(expand-quasiquote (cdr e))))))
 
 (define (expand-mcase subject subject-exp clauses)
 
