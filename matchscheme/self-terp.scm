@@ -119,7 +119,7 @@
 
   (define (assert ok?)
     (if (not ok?)
-        (error "Assertion failed")))
+        (error '"Assertion failed")))
 
   )
 
