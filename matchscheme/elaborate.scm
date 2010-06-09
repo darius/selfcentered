@@ -38,7 +38,7 @@
                `(letrec ,(map (lambda (defn)
                                 ;; (define (caadr . cdadr) . cddr)
                                 `(,(caadr defn)
-                                  (lambda ,(cdadr defn) ,@(cddr defn))))
+                                  (lambda ,(cdadr defn) . ,(cddr defn))))
                               (cadr e))
                   . ,(cddr e))))
      (let ,(lambda (e)
@@ -66,9 +66,6 @@
                  ((null? (cdar rands))
                   `(or ,(caar rands) (cond . ,(cdr rands))))
                  ((and (pair? (cdar rands)) (eq? (cadar rands) '=>))
-                  (if (not (and (list? (car rands))
-                                (= (length (car rands)) 3)))
-                      (error '"Bad cond clause syntax" rands))
                   (let ((test-var (gensym)))
                     `(let ((,test-var ,(caar rands)))
                        (if ,test-var
@@ -141,7 +138,7 @@
 
 (define (self-evaluating? x)
   (or (boolean? x)
-      (integer? x)))
+      (number? x)))
 
 (define (elaborate-seq es)
   (make-begin (map elaborate es)))
