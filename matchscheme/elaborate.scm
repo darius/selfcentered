@@ -1,8 +1,7 @@
 (define elaborate 
   (letrec
       ((core-syntax
-        `((quote ,(lambda (e)
-                    `',(expand-literal (cadr e))))
+        `((quote ,(lambda (e) e))
           (lambda ,(lambda (e)
                      `(lambda ,(cadr e) ,(elaborate-seq (cddr e)))))
           (letrec ,(lambda (e)
@@ -75,15 +74,6 @@
         (lambda (key a-list)
           (cond ((assq key a-list) => cadr)
                 (else #f))))
-
-       (expand-literal
-        (lambda (x)
-          (cond ((string? x)
-                 (map char->integer (string->list x)))
-                ((pair? x)
-                 (cons (expand-literal (car x))
-                       (expand-literal (cdr x))))
-                (else x))))
 
        (expand-quasiquote
         (lambda (e)
