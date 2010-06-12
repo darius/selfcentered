@@ -1,6 +1,19 @@
 (define elaborate 
   (letrec
-      ((core-syntax
+      ((elaborate
+        (lambda (e)
+          (cond ((symbol? e) e)
+                ((self-evaluating? e) `',e)
+                (else
+                 (assert (pair? e) '"Bad syntax" e)
+                 (cond ((lookup (car e) macros)
+                        => (lambda (expand) (elaborate (expand e))))
+                       ((lookup (car e) core-syntax)
+                        => (lambda (expand) (expand e)))
+                       (else 
+                        (map elaborate e)))))))
+
+       (core-syntax
         `((quote ,(lambda (e) e))
           (lambda ,(lambda (e)
                      `(lambda ,(cadr e) ,(elaborate-seq (cddr e)))))
@@ -154,14 +167,4 @@
               z
               (f (car xs) (foldr f z (cdr xs)))))))
 
-    (lambda (e)
-      (cond ((symbol? e) e)
-            ((self-evaluating? e) `',e)
-            (else
-             (assert (pair? e) '"Bad syntax" e)
-             (cond ((lookup (car e) macros)
-                    => (lambda (expand) (elaborate (expand e))))
-                   ((lookup (car e) core-syntax)
-                    => (lambda (expand) (expand e)))
-                   (else 
-                    (map elaborate e))))))))
+    elaborate))
