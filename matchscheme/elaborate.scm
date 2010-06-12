@@ -148,12 +148,6 @@
         (lambda (symbol x)
           (and (pair? x) (eq? (car x) symbol))))
 
-       (gensym
-        (let ((gensym-counter 0))
-          (lambda ()
-            (set! gensym-counter (+ gensym-counter 1))
-            (string->symbol (string-append '":G" (number->string gensym-counter))))))
-       
        (foldr
         (lambda (f z xs)
           (if (eq? '() xs)

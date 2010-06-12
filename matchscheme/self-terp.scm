@@ -76,6 +76,7 @@
                                                      (caddr args))))
            ;XXX for now:
            (error       ,(lambda (args) (error (car args))))
+           (gensym      ,(lambda (args) (gensym)))
            (elaborate   ,(lambda (args) (elaborate (car args))))
            (read        ,(lambda (args) (read)))
            (write       ,(lambda (args) (write (car args))))

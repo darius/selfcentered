@@ -8,6 +8,12 @@
 (define (should= x expected)
   (assert (equal? x expected) "Expected" expected))
 
+(define gensym
+  (let ((gensym-counter 0))
+    (lambda ()
+      (set! gensym-counter (+ gensym-counter 1))
+      (string->symbol (string-append '":G" (number->string gensym-counter))))))
+
 
 ;; The language implementation
 
