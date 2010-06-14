@@ -34,9 +34,9 @@
                                  '()))
          `((local ,(lambda (e)
                      `(letrec ,(map (lambda (defn)
-                                      ;; (define (caadr . cdadr) . cddr)
-                                      `(,(caadr defn)
-                                        (lambda ,(cdadr defn) . ,(cddr defn))))
+                                      (parse-defn defn
+                                                  (lambda (name value-e)
+                                                    `(,name ,value-e))))
                                     (cadr e))
                         . ,(cddr e))))
            (let ,(lambda (e)
@@ -139,6 +139,16 @@
         (lambda (x)
           (or (boolean? x)
               (number? x))))
+
+       (parse-defn
+        (lambda (defn receiver)
+          (if (symbol? (cadr defn))
+              ;; (define cadr caddr)
+              (receiver (cadr defn) (caddr defn))
+              ;; (define (caadr . cdadr) . cddr)
+              (receiver (caadr defn)
+                        `(lambda ,(cdadr defn)
+                           . ,(cddr defn))))))
 
        (elaborate-seq
         (lambda (es)
