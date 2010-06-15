@@ -46,6 +46,8 @@
 
 (test '1 '(if (< 2 3) (- 3 2) (+ 3 2)))
 
+(test 'simple '(cond (else 'simple)))
+
 (test 'greater '(cond ((< 2 3) 'greater)
                       ((< 3 2) 'less)))
 
