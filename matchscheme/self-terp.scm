@@ -185,35 +185,25 @@
                   `((lambda ,(map car bindings)
                       . ,body)
                     . ,(map cadr bindings))))))
-       (if ,(lambda (e)                 ;XXX use mcase
-              (let ((test (cadr e))
-                    (if-true (caddr e))
-                    (if-false (if (null? (cdddr e)) #f (cadddr e))))
-                `(%unless ,test
-                          (lambda () ,if-false)
-                          (lambda () ,if-true)))))
+       (if ,(lambda (e)
+              (mcase e
+                ((_ test if-true)
+                 `(%unless ,test (lambda () #f) (lambda () ,if-true)))
+                ((_ test if-true if-false)
+                 `(%unless ,test (lambda () ,if-false) (lambda () ,if-true))))))
        (cond ,(lambda (e)
-                ;; Adapted from uts.scm
-                (let ((rands (cdr e)))
-                  (cond
-                   ((null? rands) #f)
-                   ((not (pair? (car rands)))
-                    (error '"Invalid cond clause" (car rands)))
-                   ((eq? (caar rands) 'else)
-                    (if (null? (cdr rands))
-                        `(begin . ,(cdar rands))
-                        (error '"Else-clause is not last" rands)))
-                   ((null? (cdar rands))
-                    `(or ,(caar rands) (cond . ,(cdr rands))))
-                   ((and (pair? (cdar rands)) (eq? (cadar rands) '=>))
-                    (let ((test-var (gensym)))
-                      `(let ((,test-var ,(caar rands)))
-                         (if ,test-var
-                             (,(caddar rands) ,test-var)
-                             (cond . ,(cdr rands))))))
-                   (else `(if ,(caar rands) 
-                              (begin . ,(cdar rands))
-                              (cond . ,(cdr rands))))))))
+                (mcase e
+                  ((_) #f)
+                  ((_ ('else . es)) `(begin . ,es))
+                  ((_ (e) . clauses) `(or ,e (cond . ,clauses)))
+                  ((_ (e1 '=> e2) . clauses)
+                   (let ((test-var (gensym)))
+                     `(let ((,test-var ,e1))
+                        (if ,test-var
+                            (,e2 ,test-var)
+                            (cond . ,clauses)))))
+                  ((_ (e . es) . clauses)
+                   `(if ,e (begin . ,es) (cond . ,clauses))))))
        (or ,(lambda (e)
               (mcase e
                 ((_) #f)
