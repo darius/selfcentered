@@ -107,3 +107,11 @@
 
 (define (sum ns)
   (foldr + 0 ns))
+
+(define (starts-with? symbol x)
+  (and (pair? x) (eq? (car x) symbol)))
+
+(define (foldr f z xs)
+  (if (eq? '() xs)
+      z
+      (f (car xs) (foldr f z (cdr xs)))))
