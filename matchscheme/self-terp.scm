@@ -86,11 +86,8 @@
   (define (caar x) (car (car x)))
   (define (cadr x) (car (cdr x)))
   (define (cdar x) (cdr (car x)))
-  (define (cddr x) (cdr (cdr x)))
-  (define (caadr x) (car (car (cdr x))))
   (define (cadar x) (car (cdr (car x))))
   (define (caddr x) (car (cdr (cdr x))))
-  (define (cdadr x) (cdr (car (cdr x))))
   (define (cdddr x) (cdr (cdr (cdr x))))
   (define (caddar x) (car (cdr (cdr (car x)))))
   (define (cadddr x) (car (cdr (cdr (cdr x)))))
@@ -101,9 +98,9 @@
            xs))
 
   (define (foldr f z xs)
-    (if (eq? '() xs)
-        z
-        (f (car xs) (foldr f z (cdr xs)))))
+    (mcase xs
+      ('() z)
+      ((x . xs) (f x (foldr f z xs)))))
 
   (define (map2 f xs ys)
     (if (null? xs)
@@ -133,7 +130,7 @@
 
   (define (elaborate e)
     (cond ((symbol? e) e)
-          ((self-evaluating? e) `',e)
+          ((or (boolean? e) (number? e)) `',e)
           (else
            (if (not (pair? e)) (error '"Bad syntax" e))
            (cond ((lookup (car e) macros)
@@ -144,14 +141,21 @@
                   (map elaborate e))))))
 
   (define core-syntax
-    `((quote ,(lambda (e) e))
+    `((quote ,(lambda (e)
+                (mcase e
+                  ((_ _) e))))
       (lambda ,(lambda (e)
-                 `(lambda ,(cadr e) ,(elaborate-seq (cddr e)))))
+                 (mcase e
+                   ((_ vars . body)
+                    `(lambda ,vars ,(elaborate-seq body))))))
       (letrec ,(lambda (e)
-                 `(letrec ,(map (lambda (defn)
-                                  `(,(car defn) ,(elaborate (cadr defn))))
-                                (cadr e))
-                    ,(elaborate-seq (cddr e)))))
+                 (mcase e
+                   ((_ defns . body)
+                    `(letrec ,(map (lambda (defn)
+                                     (mcase defn
+                                       ((v e) `(,v ,(elaborate e)))))
+                                   defns)
+                       ,(elaborate-seq body))))))
       (begin ,(lambda (e)
                 ;; Not actually core syntax but here's how I wrote it anyway:
                 (elaborate-seq (cdr e))))))
@@ -160,20 +164,28 @@
     (cons 
      ;; This awkward line to avoid a nested quasiquote in the quasiquoted main
      ;; macros table just below:
-     (cons 'quasiquote (cons (lambda (e) (expand-quasiquote (cadr e)))
+     (cons 'quasiquote (cons (lambda (e)
+                               (mcase e
+                                 ((_ q) (expand-quasiquote q))))
                              '()))
      `((local ,(lambda (e)
-                 `(letrec ,(map (lambda (defn)
-                                  (parse-defn defn
-                                              (lambda (name value-e)
-                                                `(,name ,value-e))))
-                                (cadr e))
-                    . ,(cddr e))))
+                 (mcase e
+                   ((_ defns . body)
+                    `(letrec ,(map (lambda (defn)
+                                     (mcase defn
+                                       ((_ (: name symbol?) e)
+                                        `(,name ,e))
+                                       ((_ (name . vars) . body)
+                                        `(,name (lambda ,vars . ,body)))))
+                                   defns)
+                       . ,body)))))
        (let ,(lambda (e)
-               `((lambda ,(map car (cadr e))
-                   . ,(cddr e))
-                 . ,(map cadr (cadr e)))))
-       (if ,(lambda (e)
+               (mcase e
+                 ((_ bindings . body)
+                  `((lambda ,(map car bindings)
+                      . ,body)
+                    . ,(map cadr bindings))))))
+       (if ,(lambda (e)                 ;XXX use mcase
               (let ((test (cadr e))
                     (if-true (caddr e))
                     (if-false (if (null? (cdddr e)) #f (cadddr e))))
@@ -203,25 +215,28 @@
                               (begin . ,(cdar rands))
                               (cond . ,(cdr rands))))))))
        (or ,(lambda (e)
-              ;; Adapted from uts.scm
-              (let ((rands (cdr e)))
-                (cond ((null? rands) #f)
-                      ((null? (cdr rands)) (car rands))
-                      (else (let ((head (gensym)))
-                              `(let ((,head ,(car rands)))
-                                 (if ,head ,head (or . ,(cdr rands))))))))))
+              (mcase e
+                ((_) #f)
+                ((_ e) e)
+                ((_ e . es)
+                 (let ((head (gensym)))
+                   `(let ((,head ,e))
+                      (if ,head ,head (or . ,es))))))))
        (mcase ,(lambda (e)
-                 (expand-mcase (gensym) (cadr e) (cddr e)))))))
+                 (mcase e
+                   ((_ subject-exp . clauses)
+                    (expand-mcase (gensym) subject-exp clauses))))))))
 
   (define (lookup key a-list)
     (cond ((assq key a-list) => cadr)
           (else #f)))
 
   (define (expand-quasiquote e)
-    (cond ((not (pair? e)) `',e)
-          ((eq? (car e) 'unquote) (cadr e))
-          (else `(cons ,(expand-quasiquote (car e))
-                       ,(expand-quasiquote (cdr e))))))
+    (mcase e
+      (('unquote e) e)
+      ((qcar . qcdr) `(cons ,(expand-quasiquote qcar)
+                            ,(expand-quasiquote qcdr)))
+      (else `',e)))
 
   (define (expand-mcase subject subject-exp clauses)
     (letrec
@@ -237,57 +252,35 @@
             (let ((test-constant
                    (lambda (constant)
                      `(if (eq? ,subject ',constant) ,then-exp ,else-exp))))
-              (cond ((eq? pattern '_)
-                     then-exp)
-                    ((starts-with? 'quote pattern)
-                     (test-constant (cadr pattern)))
-                    ((symbol? pattern)
-                     `(let ((,pattern ,subject)) ,then-exp))
-                    ((starts-with? ': pattern)
-                     (let ((name (cadr pattern)) (predicate (caddr pattern)))
-                       `(if (,predicate ,subject)
-                            (let ((,name ,subject)) ,then-exp)
-                            ,else-exp)))
-                    ((pair? pattern)
-                     `(if (pair? ,subject)
-                          (mcase (car ,subject)
-                                 (,(car pattern)
-                                  (mcase (cdr ,subject)
-                                         (,(cdr pattern) ,then-exp)
-                                         (_ ,else-exp)))
-                                 (_ ,else-exp))
-                          ,else-exp))
-                    (else
-                     (test-constant pattern)))))))
+              (mcase pattern
+                ('_ then-exp)
+                (('quote constant) (test-constant constant))
+                ((: v symbol?) `(let ((,pattern ,subject)) ,then-exp))
+                ((': name predicate)
+                 `(if (,predicate ,subject)
+                      (let ((,name ,subject)) ,then-exp)
+                      ,else-exp))
+                ((pcar . pcdr)
+                 `(if (pair? ,subject)
+                      (mcase (car ,subject)
+                        (,pcar (mcase (cdr ,subject)
+                                 (,pcdr ,then-exp)
+                                 (_ ,else-exp)))
+                        (_ ,else-exp))
+                      ,else-exp))
+                (_ (test-constant pattern)))))))
       `(let ((,subject ,subject-exp))
          ,(foldr expand-clause '(%match-error) clauses))))
-
-  (define (self-evaluating? x)
-    (or (boolean? x)
-        (number? x)))
-
-  (define (parse-defn defn receiver)
-    (if (symbol? (cadr defn))
-        ;; (define cadr caddr)
-        (receiver (cadr defn) (caddr defn))
-        ;; (define (caadr . cdadr) . cddr)
-        (receiver (caadr defn)
-                  `(lambda ,(cdadr defn)
-                     . ,(cddr defn)))))
 
   (define (elaborate-seq es)
     (make-begin (map elaborate es)))
 
   (define (make-begin es)
-    (cond ((null? es) ''#f)
-          ((null? (cdr es)) (car es))
-          (else (make-begin2 (car es)
-                             (make-begin (cdr es))))))
-
-  (define (make-begin2 e1 e2)
-    `((lambda (v thunk) (thunk))
-      ,e1
-      (lambda () ,e2)))
+    (mcase es
+      ('() ''#f)
+      ((e) e)
+      ((e . es) `((lambda (,(gensym)) ,(make-begin es))
+                  ,e))))
 
   (define (starts-with? symbol x)
     (and (pair? x) (eq? (car x) symbol)))
