@@ -72,6 +72,11 @@
                        (else `(if ,(caar rands) 
                                   (begin . ,(cdar rands))
                                   (cond . ,(cdr rands))))))))
+           (and ,(lambda (e)
+                   (let ((rands (cdr e)))
+                     (cond ((null? rands) #t)
+                           ((null? (cdr rands)) (car rands))
+                           (else `(if ,(car rands) (and . ,(cdr rands)) #f))))))
            (or ,(lambda (e)
                   ;; Adapted from uts.scm
                   (let ((rands (cdr e)))
