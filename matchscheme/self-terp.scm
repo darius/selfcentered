@@ -39,7 +39,8 @@
 
   (define (env-resolve! r v value)
     (let ((box (cdr (assq v r))))
-      (assert (eq? (box-get box) uninitialized))
+      (if (not (eq? (box-get box) uninitialized))
+          (error '"Can't happen"))
       (box-set! box value)))
 
   (define (make-box value)
@@ -85,22 +86,23 @@
 
   (define (caar x) (car (car x)))
   (define (cadr x) (car (cdr x)))
-  (define (cdar x) (cdr (car x)))
-  (define (cadar x) (car (cdr (car x))))
   (define (caddr x) (car (cdr (cdr x))))
-  (define (cdddr x) (cdr (cdr (cdr x))))
-  (define (caddar x) (car (cdr (cdr (car x)))))
-  (define (cadddr x) (car (cdr (cdr (cdr x)))))
 
-  (define (map f xs)
-    (foldr (lambda (x ys) (cons (f x) ys))
-           '()
-           xs))
+  (define (null? x) (eq? x '()))
+  (define (not x) (eq? x #f))
+
+  (define (append xs ys)
+    (foldr cons ys xs))
 
   (define (foldr f z xs)
     (mcase xs
       ('() z)
       ((x . xs) (f x (foldr f z xs)))))
+
+  (define (map f xs)
+    (foldr (lambda (x ys) (cons (f x) ys))
+           '()
+           xs))
 
   (define (map2 f xs ys)
     (if (null? xs)
@@ -113,20 +115,10 @@
            (f (car xs))
            (for-each f (cdr xs)))))
 
-  (define (null? x) (eq? x '()))
-  (define (not x) (eq? x #f))
-
-  (define (append xs ys)
-    (foldr cons ys xs))
-
   (define (assq key pairs)
     (cond ((null? pairs) #f)
           ((eq? key (caar pairs)) (car pairs))
           (else (assq key (cdr pairs)))))
-
-  (define (assert ok?)
-    (if (not ok?)
-        (error '"Assertion failed")))
 
   (define (elaborate e)
     (cond ((symbol? e) e)
