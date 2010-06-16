@@ -93,7 +93,7 @@
 
        (lookup
         (lambda (key a-list)
-          (cond ((assq key a-list) => cadr)
+          (cond ((assv key a-list) => cadr)
                 (else #f))))
 
        (expand-quasiquote

@@ -55,14 +55,14 @@
                     ((< 3 3) 'less)
                     (else 'equal)))
 
-(test 2 '(local ((define (assq key pairs)
+(test 2 '(local ((define (assv key pairs)
                    (cond ((null? pairs) #f)
                          ((eqv? key (caar pairs)) (car pairs))
-                         (else (assq key (cdr pairs)))))
+                         (else (assv key (cdr pairs)))))
                  (define (null? x) (eqv? x '()))
                  (define (caar x) (car (car x)))
                  (define (cadr x) (car (cdr x))))
-           (cond ((assq 'b '((a 1) (b 2))) => cadr)
+           (cond ((assv 'b '((a 1) (b 2))) => cadr)
                  (else #f))))
 
 (test 'composite '(mcase (* 2 3)

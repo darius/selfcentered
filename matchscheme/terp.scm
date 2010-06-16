@@ -45,7 +45,7 @@
                      (cdr e)))))))
 
 (define (env-lookup r v)
-  (cond ((assq v r) => cadr)
+  (cond ((assv v r) => cadr)
         (else (error '"Unbound variable" v))))
 
 (define (env-extend r vs values)
@@ -55,7 +55,7 @@
   (env-extend r vs (map (lambda (_) uninitialized) vs)))
 
 (define (env-resolve! r v value)
-  (cond ((assq v r) => (lambda (pair)
+  (cond ((assv v r) => (lambda (pair)
                          (assert (eqv? (cadr pair) uninitialized) "WTF?" pair)
                          (set-car! (cdr pair) value)))
         (else (error '"Can't happen" v))))

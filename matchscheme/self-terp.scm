@@ -26,7 +26,7 @@
              operands)))))
 
   (define (env-lookup r v)
-    (box-get (cdr (assq v r))))
+    (box-get (cdr (assv v r))))
 
   (define (env-extend r vs values)
     (if (null? vs) 
@@ -38,7 +38,7 @@
     (env-extend r vs (map (lambda (_) uninitialized) vs)))
 
   (define (env-resolve! r v value)
-    (box-set! (cdr (assq v r)) value))
+    (box-set! (cdr (assv v r)) value))
 
   (define (make-box value)     (make-vector 1 value))
   (define (box-get box)        (vector-ref box 0))
@@ -82,7 +82,7 @@
           (else (map elaborate e))))
 
   (define (lookup key a-list)
-    (cond ((assq key a-list) => cadr)
+    (cond ((assv key a-list) => cadr)
           (else #f)))
 
   (define core-syntax
@@ -220,10 +220,10 @@
            (f (car xs))
            (for-each f (cdr xs)))))
 
-  (define (assq key pairs)
+  (define (assv key pairs)
     (cond ((null? pairs) #f)
           ((eqv? key (caar pairs)) (car pairs))
-          (else (assq key (cdr pairs)))))
+          (else (assv key (cdr pairs)))))
 
   )
 
