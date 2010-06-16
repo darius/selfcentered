@@ -149,11 +149,11 @@
                    (if ,head ,head (or . ,es)))))))
        (mlambda ,(mlambda
                   ((_ . clauses)
-                   (let ((param (gensym)))
-                     `(lambda (,param) (mcase ,param . ,clauses))))))
+                   (let ((subject (gensym)))
+                     `(lambda (,subject) ,(expand-mlambda subject clauses))))))
        (mcase ,(mlambda
                 ((_ subject-exp . clauses)
-                 (expand-mcase (gensym) subject-exp clauses)))))))
+                 `((mlambda . ,clauses) ,subject-exp)))))))
 
   (define (expand-quasiquote e)
     (mcase e
@@ -162,7 +162,7 @@
                             ,(expand-quasiquote qcdr)))
       (else `',e)))
 
-  (define (expand-mcase subject subject-exp clauses)
+  (define (expand-mlambda subject clauses)
     (local
      ((define (expand-clause clause else-exp)
         (let ((pattern (car clause))
@@ -193,8 +193,7 @@
                   ,else-exp))
             (_ (test-constant pattern))))))
 
-     `(let ((,subject ,subject-exp))
-        ,(foldr expand-clause '(%match-error) clauses))))
+     (foldr expand-clause '(%match-error) clauses)))
 
   (define (caar x) (car (car x)))
   (define (cadr x) (car (cdr x)))
