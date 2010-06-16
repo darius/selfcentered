@@ -92,23 +92,15 @@
           (else #f)))
 
   (define core-syntax
-    `((quote ,(lambda (e)
-                (mcase e
-                  ((_ _) e))))
-      (lambda ,(lambda (e)
-                 (mcase e
-                   ((_ vars . body)
-                    `(lambda ,vars ,(elaborate-seq body))))))
-      (letrec ,(lambda (e)
-                 (mcase e
-                   ((_ defns . body)
-                    `(letrec ,(map (lambda (defn)
-                                     (mcase defn
-                                       ((v e) `(,v ,(elaborate e)))))
-                                   defns)
-                       ,(elaborate-seq body))))))
-      (begin ,(lambda (e)
-                (elaborate-seq (cdr e))))))
+    `((quote ,(mlambda ((_ datum) `',datum)))
+      (lambda ,(mlambda ((_ vars . body)
+                         `(lambda ,vars ,(elaborate-seq body)))))
+      (letrec ,(mlambda ((_ defns . body)
+                         `(letrec ,(map (mlambda ((v e) `(,v ,(elaborate e))))
+                                        defns)
+                            ,(elaborate-seq body)))))
+      (begin ,(mlambda ((_ . es)
+                        (elaborate-seq es))))))
 
   (define (elaborate-seq es)
     (mcase es
