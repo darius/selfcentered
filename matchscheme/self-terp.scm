@@ -200,7 +200,7 @@
   (define (cadr x) (car (cdr x)))
 
   (define (null? x) (eq? x '()))
-  (define (not x) (eq? x #f))
+  (define (not x)   (eq? x #f))
 
   (define (append xs ys)
     (foldr cons ys xs))
