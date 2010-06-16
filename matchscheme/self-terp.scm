@@ -25,9 +25,6 @@
         (map (lambda (operand) (evaluate operand r))
              operands)))))
 
-  (define (env-lookup r v)
-    (box-get (cdr (assv v r))))
-
   (define (env-extend r vs values)
     (if (null? vs) 
         r
@@ -36,6 +33,9 @@
 
   (define (env-extend-promises r vs)
     (env-extend r vs (map (lambda (_) uninitialized) vs)))
+
+  (define (env-lookup r v)
+    (box-get (cdr (assv v r))))
 
   (define (env-resolve! r v value)
     (box-set! (cdr (assv v r)) value))
