@@ -31,26 +31,20 @@
     (box-get (cdr (assq v r))))
 
   (define (env-extend r vs values)
-    (append (map2 (lambda (v value) (cons v (make-box value))) vs values)
-            r))
+    (if (null? vs) 
+        r
+        (cons (cons (car vs) (make-box (car values)))
+              (env-extend r (cdr vs) (cdr values)))))
 
   (define (env-extend-promises r vs)
     (env-extend r vs (map (lambda (_) uninitialized) vs)))
 
   (define (env-resolve! r v value)
-    (let ((box (cdr (assq v r))))
-      (if (not (eq? (box-get box) uninitialized))
-          (error '"Can't happen"))
-      (box-set! box value)))
+    (box-set! (cdr (assq v r)) value))
 
-  (define (make-box value)
-    (make-vector 1 value))
-  
-  (define (box-get box)
-    (vector-ref box 0))
-  
-  (define (box-set! box value)
-    (vector-set! box 0 value))
+  (define (make-box value)     (make-vector 1 value))
+  (define (box-get box)        (vector-ref box 0))
+  (define (box-set! box value) (vector-set! box 0 value))
 
   (define (the-global-env)
     (map (lambda (pair) (cons (car pair) (make-box (cadr pair))))
@@ -81,56 +75,21 @@
            (elaborate   ,(lambda (args) (elaborate (car args))))
            (read        ,(lambda (args) (read)))
            (write       ,(lambda (args) (write (car args))))
-           (newline     ,(lambda (args) (newline)))
-           )))
-
-  (define (caar x) (car (car x)))
-  (define (cadr x) (car (cdr x)))
-  (define (caddr x) (car (cdr (cdr x))))
-
-  (define (null? x) (eq? x '()))
-  (define (not x) (eq? x #f))
-
-  (define (append xs ys)
-    (foldr cons ys xs))
-
-  (define (foldr f z xs)
-    (mcase xs
-      ('() z)
-      ((x . xs) (f x (foldr f z xs)))))
-
-  (define (map f xs)
-    (foldr (lambda (x ys) (cons (f x) ys))
-           '()
-           xs))
-
-  (define (map2 f xs ys)
-    (if (null? xs)
-        '()
-        (cons (f (car xs) (car ys))
-              (map2 f (cdr xs) (cdr ys)))))
-
-  (define (for-each f xs)
-    (cond ((not (null? xs))
-           (f (car xs))
-           (for-each f (cdr xs)))))
-
-  (define (assq key pairs)
-    (cond ((null? pairs) #f)
-          ((eq? key (caar pairs)) (car pairs))
-          (else (assq key (cdr pairs)))))
+           (newline     ,(lambda (args) (newline))))))
 
   (define (elaborate e)
     (cond ((symbol? e) e)
           ((or (boolean? e) (number? e)) `',e)
-          (else
-           (if (not (pair? e)) (error '"Bad syntax" e))
-           (cond ((lookup (car e) macros)
-                  => (lambda (expand) (elaborate (expand e))))
-                 ((lookup (car e) core-syntax)
-                  => (lambda (expand) (expand e)))
-                 (else 
-                  (map elaborate e))))))
+          ((not (pair? e)) (error '"Bad syntax" e))
+          ((lookup (car e) macros)
+           => (lambda (expand) (elaborate (expand e))))
+          ((lookup (car e) core-syntax)
+           => (lambda (expand) (expand e)))
+          (else (map elaborate e))))
+
+  (define (lookup key a-list)
+    (cond ((assq key a-list) => cadr)
+          (else #f)))
 
   (define core-syntax
     `((quote ,(lambda (e)
@@ -151,6 +110,13 @@
       (begin ,(lambda (e)
                 ;; Not actually core syntax but here's how I wrote it anyway:
                 (elaborate-seq (cdr e))))))
+
+  (define (elaborate-seq es)
+    (mcase es
+      ('() ''#f)
+      ((e) (elaborate e))
+      ((e . es) `((lambda (,(gensym)) ,(elaborate-seq es))
+                  ,(elaborate e)))))
 
   (define macros 
     (cons 
@@ -209,10 +175,6 @@
                    ((_ subject-exp . clauses)
                     (expand-mcase (gensym) subject-exp clauses))))))))
 
-  (define (lookup key a-list)
-    (cond ((assq key a-list) => cadr)
-          (else #f)))
-
   (define (expand-quasiquote e)
     (mcase e
       (('unquote e) e)
@@ -254,18 +216,35 @@
       `(let ((,subject ,subject-exp))
          ,(foldr expand-clause '(%match-error) clauses))))
 
-  (define (elaborate-seq es)
-    (make-begin (map elaborate es)))
+  (define (caar x) (car (car x)))
+  (define (cadr x) (car (cdr x)))
+  (define (caddr x) (car (cdr (cdr x))))
 
-  (define (make-begin es)
-    (mcase es
-      ('() ''#f)
-      ((e) e)
-      ((e . es) `((lambda (,(gensym)) ,(make-begin es))
-                  ,e))))
+  (define (null? x) (eq? x '()))
+  (define (not x) (eq? x #f))
 
-  (define (starts-with? symbol x)
-    (and (pair? x) (eq? (car x) symbol)))
+  (define (append xs ys)
+    (foldr cons ys xs))
+
+  (define (foldr f z xs)
+    (mcase xs
+      ('() z)
+      ((x . xs) (f x (foldr f z xs)))))
+
+  (define (map f xs)
+    (foldr (lambda (x ys) (cons (f x) ys))
+           '()
+           xs))
+
+  (define (for-each f xs)
+    (cond ((not (null? xs))
+           (f (car xs))
+           (for-each f (cdr xs)))))
+
+  (define (assq key pairs)
+    (cond ((null? pairs) #f)
+          ((eq? key (caar pairs)) (car pairs))
+          (else (assq key (cdr pairs)))))
 
   )
 
