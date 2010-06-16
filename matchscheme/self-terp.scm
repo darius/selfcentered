@@ -153,6 +153,10 @@
               (let ((head (gensym)))
                 `(let ((,head ,e))
                    (if ,head ,head (or . ,es)))))))
+       (mlambda ,(mlambda
+                  ((_ . clauses)
+                   (let ((param (gensym)))
+                     `(lambda (,param) (mcase ,param . ,clauses))))))
        (mcase ,(mlambda
                 ((_ subject-exp . clauses)
                  (expand-mcase (gensym) subject-exp clauses)))))))
