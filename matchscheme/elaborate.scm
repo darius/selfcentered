@@ -85,6 +85,9 @@
                           (else (let ((head (gensym)))
                                   `(let ((,head ,(car rands)))
                                      (if ,head ,head (or . ,(cdr rands))))))))))
+           (mlambda ,(lambda (e)
+                       (let ((param (gensym)))
+                         `(lambda (,param) (mcase ,param . ,(cdr e))))))
            (mcase ,(lambda (e)
                      (expand-mcase (gensym) (cadr e) (cddr e)))))))
 
