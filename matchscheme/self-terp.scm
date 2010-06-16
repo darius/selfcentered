@@ -144,9 +144,8 @@
              ((_) #f)
              ((_ e) e)
              ((_ e . es)
-              (let ((head (gensym)))
-                `(let ((,head ,e))
-                   (if ,head ,head (or . ,es)))))))
+              `(let ((v ,e) (thunk (lambda () . ,es)))
+                 (%unless v thunk (lambda () v))))))
        (mlambda ,(mlambda
                   ((_ . clauses)
                    (let ((subject (gensym)))
