@@ -113,58 +113,49 @@
     (cons 
      ;; This awkward line to avoid a nested quasiquote in the quasiquoted main
      ;; macros table just below:
-     (cons 'quasiquote (cons (lambda (e)
-                               (mcase e
-                                 ((_ q) (expand-quasiquote q))))
+     (cons 'quasiquote (cons (mlambda ((_ q) (expand-quasiquote q)))
                              '()))
-     `((local ,(lambda (e)
-                 (mcase e
-                   ((_ defns . body)
-                    `(letrec ,(map (lambda (defn)
-                                     (mcase defn
-                                       ((_ (: name symbol?) e)
-                                        `(,name ,e))
-                                       ((_ (name . vars) . body)
-                                        `(,name (lambda ,vars . ,body)))))
-                                   defns)
-                       . ,body)))))
-       (let ,(lambda (e)
-               (mcase e
-                 ((_ bindings . body)
-                  `((lambda ,(map car bindings)
-                      . ,body)
-                    . ,(map cadr bindings))))))
-       (if ,(lambda (e)
-              (mcase e
-                ((_ test if-true)
-                 `(%unless ,test (lambda () #f) (lambda () ,if-true)))
-                ((_ test if-true if-false)
-                 `(%unless ,test (lambda () ,if-false) (lambda () ,if-true))))))
-       (cond ,(lambda (e)
-                (mcase e
-                  ((_) #f)
-                  ((_ ('else . es)) `(begin . ,es))
-                  ((_ (e) . clauses) `(or ,e (cond . ,clauses)))
-                  ((_ (e1 '=> e2) . clauses)
-                   (let ((test-var (gensym)))
-                     `(let ((,test-var ,e1))
-                        (if ,test-var
-                            (,e2 ,test-var)
-                            (cond . ,clauses)))))
-                  ((_ (e . es) . clauses)
-                   `(if ,e (begin . ,es) (cond . ,clauses))))))
-       (or ,(lambda (e)
-              (mcase e
-                ((_) #f)
-                ((_ e) e)
-                ((_ e . es)
-                 (let ((head (gensym)))
-                   `(let ((,head ,e))
-                      (if ,head ,head (or . ,es))))))))
-       (mcase ,(lambda (e)
-                 (mcase e
-                   ((_ subject-exp . clauses)
-                    (expand-mcase (gensym) subject-exp clauses))))))))
+     `((local ,(mlambda
+                ((_ defns . body)
+                 `(letrec ,(map (mlambda
+                                 ((_ (: name symbol?) e)
+                                  `(,name ,e))
+                                 ((_ (name . vars) . body)
+                                  `(,name (lambda ,vars . ,body))))
+                                defns)
+                    . ,body))))
+       (let ,(mlambda
+              ((_ bindings . body)
+               `((lambda ,(map car bindings)
+                   . ,body)
+                 . ,(map cadr bindings)))))
+       (if ,(mlambda
+             ((_ test if-true)
+              `(%unless ,test (lambda () #f) (lambda () ,if-true)))
+             ((_ test if-true if-false)
+              `(%unless ,test (lambda () ,if-false) (lambda () ,if-true)))))
+       (cond ,(mlambda
+               ((_) #f)
+               ((_ ('else . es)) `(begin . ,es))
+               ((_ (e) . clauses) `(or ,e (cond . ,clauses)))
+               ((_ (e1 '=> e2) . clauses)
+                (let ((test-var (gensym)))
+                  `(let ((,test-var ,e1))
+                     (if ,test-var
+                         (,e2 ,test-var)
+                         (cond . ,clauses)))))
+               ((_ (e . es) . clauses)
+                `(if ,e (begin . ,es) (cond . ,clauses)))))
+       (or ,(mlambda
+             ((_) #f)
+             ((_ e) e)
+             ((_ e . es)
+              (let ((head (gensym)))
+                `(let ((,head ,e))
+                   (if ,head ,head (or . ,es)))))))
+       (mcase ,(mlambda
+                ((_ subject-exp . clauses)
+                 (expand-mcase (gensym) subject-exp clauses)))))))
 
   (define (expand-quasiquote e)
     (mcase e
