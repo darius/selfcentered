@@ -163,7 +163,7 @@
 
   (define (expand-quasiquote e)
     (mcase e
-      (('unquote e) e)
+      (('unquote e1) e1)
       ((qcar . qcdr) `(cons ,(expand-quasiquote qcar)
                             ,(expand-quasiquote qcdr)))
       (else `',e)))
