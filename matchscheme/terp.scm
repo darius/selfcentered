@@ -56,7 +56,7 @@
 
 (define (env-resolve! r v value)
   (cond ((assq v r) => (lambda (pair)
-                         (assert (eq? (cadr pair) uninitialized) "WTF?" pair)
+                         (assert (eqv? (cadr pair) uninitialized) "WTF?" pair)
                          (set-car! (cdr pair) value)))
         (else (error '"Can't happen" v))))
 
@@ -72,7 +72,7 @@
     (number?     ,number?)
     (pair?       ,pair?)
     (symbol?     ,symbol?)
-    (eq?         ,eqv?)
+    (eqv?        ,eqv?)
     (+           ,+)
     (-           ,-)
     (*           ,*)
@@ -104,11 +104,11 @@
 (should= (interpret '((lambda (x) x)
                       '55))
          55)
-(should= (interpret '(let ((x (eq? 4 (+ 2 2))))
+(should= (interpret '(let ((x (eqv? 4 (+ 2 2))))
                        x))
          #t)
 (should= (interpret '(local ((define (fact n)
-                               (if (eq? n 0)
+                               (if (eqv? n 0)
                                    1
                                    (* n (fact (- n 1))))))
                        (fact 5)))

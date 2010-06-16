@@ -52,7 +52,7 @@
            (number?     ,(mlambda ((x) (number? x))))
            (pair?       ,(mlambda ((x) (pair? x))))
            (symbol?     ,(mlambda ((x) (symbol? x))))
-           (eq?         ,(mlambda ((x y) (eq? x y))))
+           (eqv?        ,(mlambda ((x y) (eqv? x y))))
            (+           ,(mlambda ((x y) (+ x y))))
            (-           ,(mlambda ((x y) (- x y))))
            (*           ,(mlambda ((x y) (* x y))))
@@ -174,7 +174,7 @@
       (define (expand-pattern pattern then-exp else-exp)
         (let ((test-constant
                (lambda (constant)
-                 `(if (eq? ,subject ',constant) ,then-exp ,else-exp))))
+                 `(if (eqv? ,subject ',constant) ,then-exp ,else-exp))))
           (mcase pattern
             ('_ then-exp)
             (('quote constant) (test-constant constant))
@@ -199,8 +199,8 @@
   (define (caar x) (car (car x)))
   (define (cadr x) (car (cdr x)))
 
-  (define (null? x) (eq? x '()))
-  (define (not x)   (eq? x #f))
+  (define (null? x) (eqv? x '()))
+  (define (not x)   (eqv? x #f))
 
   (define (append xs ys)
     (foldr cons ys xs))
@@ -222,7 +222,7 @@
 
   (define (assq key pairs)
     (cond ((null? pairs) #f)
-          ((eq? key (caar pairs)) (car pairs))
+          ((eqv? key (caar pairs)) (car pairs))
           (else (assq key (cdr pairs)))))
 
   )

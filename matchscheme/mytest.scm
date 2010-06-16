@@ -57,9 +57,9 @@
 
 (test 2 '(local ((define (assq key pairs)
                    (cond ((null? pairs) #f)
-                         ((eq? key (caar pairs)) (car pairs))
+                         ((eqv? key (caar pairs)) (car pairs))
                          (else (assq key (cdr pairs)))))
-                 (define (null? x) (eq? x '()))
+                 (define (null? x) (eqv? x '()))
                  (define (caar x) (car (car x)))
                  (define (cadr x) (car (cdr x))))
            (cond ((assq 'b '((a 1) (b 2))) => cadr)
@@ -78,11 +78,11 @@
                     ('y 'semivowel)
                     (_ 'consonant)))
 
-(test #t '(eq? 2 2))
-(test #f '(eq? 2 3))
+(test #t '(eqv? 2 2))
+(test #f '(eqv? 2 3))
 
-(test #t '(or (eq? 2 2) (< 1 2)))
-(test #t '(or (eq? 2 2) (< 2 1)))
+(test #t '(or (eqv? 2 2) (< 1 2)))
+(test #t '(or (eqv? 2 2) (< 2 1)))
 (test #f '(or #f #f #f))
 (test #f '(or))
 (test '(b c) '(or (cdr '(a b c)) (+ 3 0)))
@@ -91,9 +91,9 @@
 (test 35 '(let ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x))))
 ;(test 70 '(let ((x 2) (y 3)) (let* ((x 7) (z (+ x y))) (* z x))))
 (test #t '(letrec ((even?
-                    (lambda (n) (if (eq? 0 n) #t (odd? (- n 1)))))
+                    (lambda (n) (if (eqv? 0 n) #t (odd? (- n 1)))))
                    (odd?
-                    (lambda (n) (if (eq? 0 n) #f (even? (- n 1))))))
+                    (lambda (n) (if (eqv? 0 n) #f (even? (- n 1))))))
             (even? 88)))
 
 (test '(list 3 4) '`(list ,(+ 1 2) 4))
@@ -105,7 +105,7 @@
                                      '()
                                      xs))
                             (define (foldr f z xs)
-                              (if (eq? '() xs)
+                              (if (eqv? '() xs)
                                   z
                                   (f (car xs) (foldr f z (cdr xs)))))
                             (define (abs n)
@@ -122,8 +122,8 @@
                     (define (bar a b) (+ (* a b) a)))
 	      (foo (+ x 3)))))
 
-(test #f '(eq? (cons 1 2) (cons 1 2)))
-(test #f '(eq? (lambda () 1) (lambda () 2)))
+(test #f '(eqv? (cons 1 2) (cons 1 2)))
+(test #f '(eqv? (lambda () 1) (lambda () 2)))
 
 (test #t '(let ((p (lambda (x) x)))
-            (eq? p p)))
+            (eqv? p p)))

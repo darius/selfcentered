@@ -57,13 +57,13 @@
                        ((null? rands) #f)
                        ((not (pair? (car rands)))
                         (error '"Invalid cond clause" (car rands)))
-                       ((eq? (caar rands) 'else)
+                       ((eqv? (caar rands) 'else)
                         (if (null? (cdr rands))
                             `(begin . ,(cdar rands))
                             (error '"Else-clause is not last" rands)))
                        ((null? (cdar rands))
                         `(or ,(caar rands) (cond . ,(cdr rands))))
-                       ((and (pair? (cdar rands)) (eq? (cadar rands) '=>))
+                       ((and (pair? (cdar rands)) (eqv? (cadar rands) '=>))
                         (let ((test-var (gensym)))
                           `(let ((,test-var ,(caar rands)))
                              (if ,test-var
@@ -99,7 +99,7 @@
        (expand-quasiquote
         (lambda (e)
           (cond ((not (pair? e)) `',e)
-                ((eq? (car e) 'unquote) (cadr e))
+                ((eqv? (car e) 'unquote) (cadr e))
                 (else `(cons ,(expand-quasiquote (car e))
                              ,(expand-quasiquote (cdr e)))))))
 
@@ -118,8 +118,8 @@
                 (lambda (pattern then-exp else-exp)
                   (let ((test-constant
                          (lambda (constant)
-                           `(if (eq? ,subject ',constant) ,then-exp ,else-exp))))
-                    (cond ((eq? pattern '_)
+                           `(if (eqv? ,subject ',constant) ,then-exp ,else-exp))))
+                    (cond ((eqv? pattern '_)
                            then-exp)
                           ((starts-with? 'quote pattern)
                            (test-constant (cadr pattern)))
@@ -177,11 +177,11 @@
 
        (starts-with?
         (lambda (symbol x)
-          (and (pair? x) (eq? (car x) symbol))))
+          (and (pair? x) (eqv? (car x) symbol))))
 
        (foldr
         (lambda (f z xs)
-          (if (eq? '() xs)
+          (if (eqv? '() xs)
               z
               (f (car xs) (foldr f z (cdr xs)))))))
 
