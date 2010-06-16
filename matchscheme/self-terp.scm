@@ -108,7 +108,6 @@
                                    defns)
                        ,(elaborate-seq body))))))
       (begin ,(lambda (e)
-                ;; Not actually core syntax but here's how I wrote it anyway:
                 (elaborate-seq (cdr e))))))
 
   (define (elaborate-seq es)
