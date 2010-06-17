@@ -1,4 +1,6 @@
-;; terp.scm, metacircular edition
+;; 'Bytecode' compiler -- currently completely non-optimizing,
+;; unless you count tail recursion and open-coding primitives.
+;; Uses linked environments.
 
 (local
 
