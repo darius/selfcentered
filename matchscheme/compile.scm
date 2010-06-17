@@ -41,9 +41,8 @@
            (op-code
             (mcase k
               ((('return)) (append rands-code op-code))
-              (_ (append `((push-cont ,(+ (length rands-code) (length op-code)))
-                           . ,rands-code)
-                         (append op-code k))))))))))
+              (_ `((push-cont ,(+ (length rands-code) (length op-code)))
+                   . ,(append rands-code (append op-code k)))))))))))
 
   (define (length xs)
     (mcase xs
