@@ -1,5 +1,6 @@
-;; Scheme subset except with LETREC specified more tightly, and with
-;; a procedural representation of booleans.
+;; Scheme subset except with LETREC specified more tightly, plus a
+;; couple of primitives: ELABORATE to expand derived forms, and
+;; %UNLESS for IF to expand into.
 
 ;; Core syntax:
 ;; e = v
