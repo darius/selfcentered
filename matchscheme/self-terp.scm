@@ -98,7 +98,6 @@
 
   (define (elaborate-seq es)
     (mcase es
-      ('() ''#f)
       ((e) (elaborate e))
       ((e . es) `((lambda (,(gensym)) ,(elaborate-seq es))
                   ,(elaborate e)))))

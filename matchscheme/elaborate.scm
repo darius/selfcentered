@@ -164,7 +164,7 @@
 
        (make-begin
         (lambda (es)
-          (cond ((null? es) ''#f)
+          (cond ((null? es) (error '"Missing body in BEGIN"))
                 ((null? (cdr es)) (car es))
                 (else (make-begin2 (car es)
                                    (make-begin (cdr es)))))))
