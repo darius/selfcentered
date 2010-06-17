@@ -119,8 +119,7 @@
                     . ,body))))
        (let ,(mlambda
               ((_ bindings . body)
-               `((lambda ,(map car bindings)
-                   . ,body)
+               `((lambda ,(map car bindings) . ,body)
                  . ,(map cadr bindings)))))
        (if ,(mlambda
              ((_ test if-true)
