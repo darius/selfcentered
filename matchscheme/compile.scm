@@ -218,9 +218,7 @@
   (define (not x)   (eqv? x #f))
 
   (define (length xs)
-    (mcase xs
-      ('() 0)
-      ((_ . xs) (+ 1 (length xs)))))
+    (foldr (lambda (x n) (+ n 1)) 0 xs))
 
   (define (flatten lists)
     (foldr append '() lists))
