@@ -44,11 +44,6 @@
               (_ `((push-cont ,(+ (length rands-code) (length op-code)))
                    . ,(append rands-code (append op-code k)))))))))))
 
-  (define (length xs)
-    (mcase xs
-      ('() 0)
-      ((_ . xs) (+ 1 (length xs)))))
-
   (define (env-extend r vs)
     (cons vs r))
 
@@ -222,6 +217,11 @@
 
   (define (null? x) (eqv? x '()))
   (define (not x)   (eqv? x #f))
+
+  (define (length xs)
+    (mcase xs
+      ('() 0)
+      ((_ . xs) (+ 1 (length xs)))))
 
   (define (flatten lists)
     (foldr append '() lists))
