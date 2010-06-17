@@ -58,17 +58,18 @@
   (define (length xs)
     (foldr (lambda (x n) (+ n 1)) 0 xs))
 
+  (define (append xs ys)
+    (foldr cons ys xs))
+
+  (define (foldr f z xs)
+    (mcase xs
+      ('() z)
+      ((x . xs) (f x (foldr f z xs)))))
+
   (define (map f xs)
     (foldr (lambda (x ys) (cons (f x) ys))
            '()
            xs))
-
-  (define (append xs ys)    (foldr cons ys xs))
-
-  (define (foldr f z xs)
-    (if (eqv? '() xs)
-        z
-        (f (car xs) (foldr f z (cdr xs)))))
 
   (define (memv? x set)
     (cond ((eqv? '() set) #f)
