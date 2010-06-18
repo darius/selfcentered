@@ -83,7 +83,6 @@
       ;;XXX for now:
       (error       2)
       (gensym      0)
-      (elaborate   1)
       (read        0)
       (write       1)
       (newline     0)))

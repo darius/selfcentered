@@ -66,7 +66,6 @@
            ;XXX for now:
            (error       ,(mlambda ((x y) (error x y))))
            (gensym      ,(mlambda ('() (gensym))))
-           (elaborate   ,(mlambda ((x) (elaborate x))))
            (read        ,(mlambda ('() (read))))
            (write       ,(mlambda ((x) (write x))))
            (newline     ,(mlambda ('() (newline)))))))

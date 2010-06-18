@@ -87,7 +87,6 @@
     ;; For now:
     (error       ,error)
     (gensym      ,gensym)
-    (elaborate   ,elaborate)
     (read        ,(lambda () (expand-strings (read))))
     (write       ,write)
     (newline     ,newline)
