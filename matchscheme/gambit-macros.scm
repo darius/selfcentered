@@ -56,3 +56,10 @@
 
 (define-macro (mcase subject-exp . clauses)
   `((mlambda . ,clauses) ,subject-exp))
+
+;; Also LOCAL
+
+(define-macro (local defns . body)
+  `(let ()
+     ,@defns
+     ,@body))
