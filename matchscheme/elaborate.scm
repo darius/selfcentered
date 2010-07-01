@@ -23,13 +23,14 @@
                                     (cadr e))
                         ,(elaborate-seq (cddr e)))))
           (begin ,(lambda (e)
-                    ;; Not actually core syntax but here's how I wrote it anyway:
+                    ;; Not actually core syntax but here's how I wrote
+                    ;; it anyway:
                     (elaborate-seq (cdr e))))))
 
        (macros 
         (cons 
-         ;; This awkward line to avoid a nested quasiquote in the quasiquoted main
-         ;; macros table just below:
+         ;; This awkward line to avoid a nested quasiquote in the
+         ;; quasiquoted main macros table just below:
          (cons 'quasiquote (cons (lambda (e) (expand-quasiquote (cadr e)))
                                  '()))
          `((local ,(lambda (e)
@@ -118,7 +119,9 @@
                 (lambda (pattern then-exp else-exp)
                   (let ((test-constant
                          (lambda (constant)
-                           `(if (eqv? ,subject ',constant) ,then-exp ,else-exp))))
+                           `(if (eqv? ,subject ',constant)
+                                ,then-exp
+                                ,else-exp))))
                     (cond ((eqv? pattern '_)
                            then-exp)
                           ((starts-with? 'quote pattern)
@@ -126,17 +129,18 @@
                           ((symbol? pattern)
                            `(let ((,pattern ,subject)) ,then-exp))
                           ((starts-with? ': pattern)
-                           (let ((name (cadr pattern)) (predicate (caddr pattern)))
+                           (let ((name (cadr pattern))
+                                 (predicate (caddr pattern)))
                              `(if (,predicate ,subject)
                                   (let ((,name ,subject)) ,then-exp)
                                   ,else-exp)))
                           ((pair? pattern)
                            `(if (pair? ,subject)
                                 (mcase (car ,subject)
-                                       (,(car pattern) (mcase (cdr ,subject)
-                                                              (,(cdr pattern) ,then-exp)
-                                                              (_ ,else-exp)))
-                                       (_ ,else-exp))
+                                  (,(car pattern) (mcase (cdr ,subject)
+                                                    (,(cdr pattern) ,then-exp)
+                                                    (_ ,else-exp)))
+                                  (_ ,else-exp))
                                 ,else-exp))
                           (else
                            (test-constant pattern)))))))

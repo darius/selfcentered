@@ -25,7 +25,8 @@
                               ((v1 e1)
                                (evaluate e1 new-r
                                          (mcase (env-lookup new-r v1)
-                                           (('ref '0 offset) `((fixup ,offset)))))))
+                                           (('ref '0 offset)
+                                            `((fixup ,offset)))))))
                              defns))
                (evaluate body new-r k)))))
       ((operator . operands)
