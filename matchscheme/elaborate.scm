@@ -144,10 +144,6 @@
     `(let ((,subject ,subject-exp))
        ,(foldr expand-clause '(%match-error) clauses))))
 
-(define (self-evaluating? x)
-  (or (boolean? x)
-      (number? x)))
-
 (define (parse-defn defn receiver)
   (if (symbol? (cadr defn))
       ;; (define cadr caddr)
