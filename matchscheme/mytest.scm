@@ -1,5 +1,7 @@
 ;; Adapted from Aubrey Jaffer's test.scm.
 
+(define failed #f)
+
 (define test
   (lambda (expect expr)
     (write expr)
@@ -9,6 +11,7 @@
       (newline)
       (cond ((not (equal? expect res))
 ;	     (record-error (list res expect (cons fun args)))
+             (set! failed #t)
 	     (display " BUT EXPECTED ")
 	     (write expect)
 	     (newline)
@@ -127,3 +130,5 @@
 
 (test #t '(let ((p (lambda (x) x)))
             (eqv? p p)))
+
+(if failed (error "Some test(s) failed."))
