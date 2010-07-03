@@ -1,26 +1,25 @@
-  (define (elaborate e)
-    (cond ((symbol? e) e)
-          ((or (boolean? e) (number? e)) `',e)
-          ((not (pair? e)) (error '"Bad syntax" e))
-          ((lookup (car e) macros)
-           => (lambda (expand) (elaborate (expand e))))
-          ((lookup (car e) core-syntax)
-           => (lambda (expand) (expand e)))
-          (else (map elaborate e))))
+(include "gambit-macros.scm")
+
+(define (elaborate e)
+  (cond ((symbol? e) e)
+        ((or (boolean? e) (number? e)) `',e)
+        ((not (pair? e)) (error '"Bad syntax" e))
+        ((lookup (car e) macros)
+         => (lambda (expand) (elaborate (expand e))))
+        ((lookup (car e) core-syntax)
+         => (lambda (expand) (expand e)))
+        (else (map elaborate e))))
 
 (define core-syntax
-  `((quote ,(lambda (e) e))
-    (lambda ,(lambda (e)
-               `(lambda ,(cadr e) ,(elaborate-seq (cddr e)))))
-    (letrec ,(lambda (e)
-               `(letrec ,(map (lambda (defn)
-                                `(,(car defn) ,(elaborate (cadr defn))))
-                              (cadr e))
-                  ,(elaborate-seq (cddr e)))))
-    (begin ,(lambda (e)
-              ;; Not actually core syntax but here's how I wrote
-              ;; it anyway:
-              (elaborate-seq (cdr e))))))
+  `((quote ,(mlambda ((_ datum) `',datum)))
+    (lambda ,(mlambda ((_ vars . body)
+                       `(lambda ,vars ,(elaborate-seq body)))))
+    (letrec ,(mlambda ((_ defns . body)
+                       `(letrec ,(map (mlambda ((v e) `(,v ,(elaborate e))))
+                                      defns)
+                          ,(elaborate-seq body)))))
+    (begin ,(mlambda ((_ . es)
+                      (elaborate-seq es))))))
 
 (define macros 
   (cons 
