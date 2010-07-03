@@ -10,15 +10,7 @@
 ;;   | (e e ...)
 
 (define (interpret e)
-  (evaluate (elaborate (expand-strings e)) the-global-env))
-
-(define (expand-strings x)
-  (cond ((string? x)
-         (map char->integer (string->list x)))
-        ((pair? x)
-         (cons (expand-strings (car x))
-               (expand-strings (cdr x))))
-        (else x)))
+  (evaluate (elaborate e) the-global-env))
 
 (define (evaluate e r)
   (if (symbol? e)
@@ -87,7 +79,7 @@
     ;; For now:
     (error       ,error)
     (gensym      ,gensym)
-    (read        ,(lambda () (expand-strings (read))))
+    (read        ,read)
     (write       ,write)
     (newline     ,newline)
     ))
