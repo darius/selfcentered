@@ -10,6 +10,10 @@
          => (lambda (expand) (expand e)))
         (else (map elaborate e))))
 
+(define (lookup key a-list)
+  (cond ((assv key a-list) => cadr)
+        (else #f)))
+
 (define core-syntax
   `((quote ,(mlambda ((_ datum) `',datum)))
     (lambda ,(mlambda ((_ vars . body)
@@ -92,15 +96,12 @@
      (mcase ,(lambda (e)
                (expand-mcase (gensym) (cadr e) (cddr e)))))))
 
-(define (lookup key a-list)
-  (cond ((assv key a-list) => cadr)
-        (else #f)))
-
 (define (expand-quasiquote e)
-  (cond ((not (pair? e)) `',e)
-        ((eqv? (car e) 'unquote) (cadr e))
-        (else `(cons ,(expand-quasiquote (car e))
-                     ,(expand-quasiquote (cdr e))))))
+  (mcase e
+    (('unquote e1) e1)
+    ((qcar . qcdr) `(cons ,(expand-quasiquote qcar)
+                          ,(expand-quasiquote qcdr)))
+    (else `',e)))
 
 (define (expand-mcase subject subject-exp clauses)
   (letrec
