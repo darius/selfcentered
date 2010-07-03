@@ -1,14 +1,12 @@
-(define (elaborate e)
-  (cond ((symbol? e) e)
-        ((self-evaluating? e) `',e)
-        (else
-         (assert (pair? e) '"Bad syntax" e)
-         (cond ((lookup (car e) macros)
-                => (lambda (expand) (elaborate (expand e))))
-               ((lookup (car e) core-syntax)
-                => (lambda (expand) (expand e)))
-               (else 
-                (map elaborate e))))))
+  (define (elaborate e)
+    (cond ((symbol? e) e)
+          ((or (boolean? e) (number? e)) `',e)
+          ((not (pair? e)) (error '"Bad syntax" e))
+          ((lookup (car e) macros)
+           => (lambda (expand) (elaborate (expand e))))
+          ((lookup (car e) core-syntax)
+           => (lambda (expand) (expand e)))
+          (else (map elaborate e))))
 
 (define core-syntax
   `((quote ,(lambda (e) e))
