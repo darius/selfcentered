@@ -21,6 +21,12 @@
     (begin ,(mlambda ((_ . es)
                       (elaborate-seq es))))))
 
+(define (elaborate-seq es)
+  (mcase es
+    ((e) (elaborate e))
+    ((e . es) `((lambda (,(gensym)) ,(elaborate-seq es))
+                ,(elaborate e)))))
+
 (define macros 
   (cons 
    ;; This awkward line to avoid a nested quasiquote in the
@@ -151,16 +157,3 @@
                 `(lambda ,(cdadr defn)
                    . ,(cddr defn)))))
 
-(define (elaborate-seq es)
-  (make-begin (map elaborate es)))
-
-(define (make-begin es)
-  (cond ((null? es) (error '"Missing body in BEGIN"))
-        ((null? (cdr es)) (car es))
-        (else (make-begin2 (car es)
-                           (make-begin (cdr es))))))
-
-(define (make-begin2 e1 e2)
-  `((lambda (v thunk) (thunk))
-    ,e1
-    (lambda () ,e2)))
