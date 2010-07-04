@@ -82,4 +82,5 @@
     (read        ,read)
     (write       ,write)
     (newline     ,newline)
+    (snarf       ,snarf)
     ))
