@@ -68,7 +68,8 @@
            (gensym      ,(mlambda ('() (gensym))))
            (read        ,(mlambda ('() (read))))
            (write       ,(mlambda ((x) (write x))))
-           (newline     ,(mlambda ('() (newline)))))))
+           (newline     ,(mlambda ('() (newline))))
+           (snarf       ,(mlambda ((x) (snarf x)))))))
 
   (define (elaborate e)
     (cond ((symbol? e) e)

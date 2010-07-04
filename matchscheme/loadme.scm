@@ -10,6 +10,15 @@
 (define (should= x expected)
   (assert (equal? x expected) "Expected" expected))
 
+(define (snarf filename)
+  (call-with-input-file filename
+    (lambda (port)
+      (let reading ()
+        (let ((sx (read port)))
+          (if (eof-object? sx)
+              '()
+              (cons sx (reading))))))))
+
 
 ;; The language implementation
 

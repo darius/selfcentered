@@ -145,4 +145,6 @@
 (test #t '(let ((p (lambda (x) x)))
             (eqv? p p)))
 
+(test '(hello (goodbye (world))) '(snarf '"a-test-file.scm"))
+
 (if failed (error "Some test(s) failed."))
