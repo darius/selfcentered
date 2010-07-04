@@ -1,3 +1,6 @@
+;; "magic" is explained in loadme.scm.
+magic
+
 ;; MCASE and MLAMBDA as Gambit-Scheme macros.
 
 (define (expand-mlambda subject clauses)

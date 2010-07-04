@@ -110,13 +110,7 @@
                              '()))
      `((local ,(mlambda
                 ((_ defns . body)
-                 `(letrec ,(map (mlambda
-                                 ((_ (: name symbol?) e)
-                                  `(,name ,e))
-                                 ((_ (name . vars) . body)
-                                  `(,name (lambda ,vars . ,body))))
-                                defns)
-                    . ,body))))
+                 `(letrec ,(foldr expand-defn '() defns) . ,body))))
        (let ,(mlambda
               ((_ bindings . body)
                `((lambda ,(map car bindings) . ,body)
@@ -151,6 +145,17 @@
        (mcase ,(mlambda
                 ((_ subject-exp . clauses)
                  `((mlambda . ,clauses) ,subject-exp)))))))
+
+  (define (expand-defn defn expanded-defns)
+    (mcase defn
+      ((_ (: name symbol?) e)
+       `((,name ,e) . ,expanded-defns))
+      ((_ (name . vars) . body)
+       `((,name (lambda ,vars . ,body)) . ,expanded-defns))
+      (('include filename)
+       (mcase (snarf filename)
+         (('magic . _) expanded-defns)
+         (included-defns (foldr expand-defn expanded-defns included-defns))))))
 
   (define (expand-quasiquote e)
     (mcase e

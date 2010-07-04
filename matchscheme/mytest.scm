@@ -147,4 +147,9 @@
 
 (test '(hello (goodbye (world))) '(snarf '"a-test-file.scm"))
 
+(test 'god '(local ((define (zog) (frog))
+                    (include "include-test-0.scm")
+                    (define (blog) (zog)))
+              (blog)))
+
 (if failed (error "Some test(s) failed."))
