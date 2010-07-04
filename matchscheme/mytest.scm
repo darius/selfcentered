@@ -10,7 +10,6 @@
       (write res)
       (newline)
       (cond ((not (equal? expect res))
-;	     (record-error (list res expect (cons fun args)))
              (set! failed #t)
 	     (display " BUT EXPECTED ")
 	     (write expect)
@@ -19,17 +18,26 @@
 	    (else #t)))
      (interpreter-to-test expr))))
 
+(test 42 '42)
+
 (test '(quote a) '(quote 'a))
 
 (test 2 '(- 5 3))
 
+(test 'world '(car (cdr '(hello world))))
+
 (test 42 '((lambda () 42)))
+
+(test 55 '((lambda (x) x) 55))
 
 (test 8 '((lambda (x) (+ x x)) 4))
 
 (test 7 '(if #f 5 7))
 
 (test 12 '((if #f + *) 3 4))
+
+(test #t '(let ((x (eqv? 4 (+ 2 2))))
+            x))
 
 (test 3 '(let ((reverse-subtract
                 (lambda (x y) (- y x))))
@@ -98,6 +106,12 @@
                    (odd?
                     (lambda (n) (if (eqv? 0 n) #f (even? (- n 1))))))
             (even? 88)))
+
+(test 120 '(local ((define (fact n)
+                     (if (eqv? n 0)
+                         1
+                         (* n (fact (- n 1))))))
+             (fact 5)))
 
 (test '(list 3 4) '`(list ,(+ 1 2) 4))
 
