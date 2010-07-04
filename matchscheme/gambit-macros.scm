@@ -1,5 +1,10 @@
-;; "magic" is explained in loadme.scm.
-magic
+;; I want to use (include "foo.scm") to share code between the
+;; bootstrap implementation and the self-implementation. For the
+;; bootstrap, the files must also (include "gambit-macros.scm") which
+;; must be a no-op when seen by the self-implementation. We tell it to
+;; treat us as a nop-op by starting with a special tag expression,
+;; "'magic".
+'magic
 
 ;; MCASE and MLAMBDA as Gambit-Scheme macros.
 

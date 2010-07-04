@@ -154,7 +154,7 @@
        `((,name (lambda ,vars . ,body)) . ,expanded-defns))
       (('include filename)
        (mcase (snarf filename)
-         (('magic . _) expanded-defns)
+         ((('quote 'magic) . _) expanded-defns)
          (included-defns (foldr expand-defn expanded-defns included-defns))))))
 
   (define (expand-quasiquote e)

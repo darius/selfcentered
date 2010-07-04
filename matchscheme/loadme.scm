@@ -17,19 +17,6 @@
               '()
               (cons sx (reading))))))))
 
-
-;; Here's a mess: I want to use (include "foo.scm") to share code
-;; between the bootstrap implementation and the self-implementation.
-;; For the bootstrap, the files must also (include
-;; "gambit-macros.scm") which must be a no-op when seen by the
-;; self-implementation. We arrange this by starting gambit-macros.scm
-;; with a special tag expression, "magic". We give it a value here, so
-;; Gambit won't complain. (XXX Why not make the tag be "(quote magic)"
-;; instead? Well, I did, but it broke: the elaborator then gives us a
-;; match error. Sounds like a bug in ELABORATE, sigh. Look into it.)
-
-(define magic #f)
-
 (include "gambit-macros.scm")
 
 
