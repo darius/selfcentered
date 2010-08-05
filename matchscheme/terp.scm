@@ -56,7 +56,7 @@
 (define uninitialized (vector '*uninitialized*))
 
 (define (%unless test if-no if-yes)
-  (if test (if-yes) (if-no)))
+  (if test if-yes if-no))
 
 (define the-global-env
   `((uninitialized ,uninitialized)

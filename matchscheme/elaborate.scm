@@ -41,9 +41,9 @@
               . ,(map cadr bindings)))))
     ('if (mlambda
           ((_ test if-true)
-           `(%unless ,test (lambda () #f) (lambda () ,if-true)))
+           `((%unless ,test (lambda () #f) (lambda () ,if-true))))
           ((_ test if-true if-false)
-           `(%unless ,test (lambda () ,if-false) (lambda () ,if-true)))))
+           `((%unless ,test (lambda () ,if-false) (lambda () ,if-true))))))
     ('cond (mlambda
             ((_) #f)
             ((_ ('else . es)) `(begin . ,es))
@@ -61,7 +61,7 @@
           ((_ e) e)
           ((_ e . es)
            `(let ((v ,e) (thunk (lambda () . ,es)))
-              (%unless v thunk (lambda () v))))))
+              ((%unless v thunk (lambda () v)))))))
     ('mlambda (mlambda
                ((_ . clauses)
                 (let ((subject (gensym)))

@@ -47,7 +47,7 @@
   (define (the-global-env)
     (map (mlambda ((name value) (cons name (make-box value))))
          `((uninitialized ,uninitialized)
-           (%unless     ,(mlambda ((x y z) ((if x z y) '()))))
+           (%unless     ,(mlambda ((x y z) (%unless x y z))))
            (boolean?    ,(mlambda ((x) (boolean? x))))
            (number?     ,(mlambda ((x) (number? x))))
            (pair?       ,(mlambda ((x) (pair? x))))
