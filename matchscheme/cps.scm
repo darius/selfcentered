@@ -19,7 +19,7 @@
                                               ,(cc fbody k1))))))
                            defns)
                ,(cc body k)))
-           ((%prim operator . operands)
+           (('%prim operator . operands)
             (cc* operands (lambda (xs) `(%prim ,operator . ,xs)))))
            ((operator . operands)
             (cc* (cons operator operands)

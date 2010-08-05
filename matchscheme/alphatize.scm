@@ -20,7 +20,7 @@
                                          `(,(lookup f r) ,(alphatizing e r))))
                                defns)
                    ,(alphatizing body r)))))
-           ((%prim operator . operands)
+           (('%prim operator . operands)
             `(%prim ,operator . ,(map alpha operands)))
            ((operator . operands)
             `(,(alpha operator) . ,(map alpha operands))))))
