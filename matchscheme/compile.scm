@@ -8,8 +8,7 @@
     (convert (elaborate (wrap e)) (lambda (v) v)))
 
   (define (wrap e)
-    `(let ((uninitialized ',uninitialized)  ; XXX remove
-           (%unless     (lambda (x y z) (%prim %unless x y z)))
+    `(let ((%unless     (lambda (x y z) (%prim %unless x y z)))
            (boolean?    (lambda (x)     (%prim boolean? x)))
            (number?     (lambda (x)     (%prim number? x)))
            (pair?       (lambda (x)     (%prim pair? x)))

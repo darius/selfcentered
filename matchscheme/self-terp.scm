@@ -32,7 +32,7 @@
               (env-extend r (cdr vs) (cdr values)))))
 
   (define (env-extend-promises r vs)
-    (env-extend r vs (map (lambda (_) uninitialized) vs)))
+    (env-extend r vs (map (lambda (_) '*uninitialized*) vs)))
 
   (define (env-lookup r v)
     (box-get (cdr (assv v r))))
@@ -46,8 +46,7 @@
 
   (define (the-global-env)
     (map (mlambda ((name value) (cons name (make-box value))))
-         `((uninitialized ,uninitialized)
-           (%unless     ,(mlambda ((x y z) (%unless x y z))))
+         `((%unless     ,(mlambda ((x y z) (%unless x y z))))
            (boolean?    ,(mlambda ((x) (boolean? x))))
            (number?     ,(mlambda ((x) (number? x))))
            (pair?       ,(mlambda ((x) (pair? x))))

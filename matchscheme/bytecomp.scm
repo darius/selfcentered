@@ -65,8 +65,6 @@
 
   (define (primitive-arity prim)
     (mcase prim
-      ;; NB we won't need 'uninitialized' any more. But we haven't yet
-      ;; eliminated it from terp, so this is a difference from there.
       ('%unless     3)
       ('boolean?    1)
       ('number?     1)

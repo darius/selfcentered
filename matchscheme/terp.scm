@@ -1,6 +1,5 @@
-;; Scheme subset except with LETREC specified more tightly, plus a
-;; couple of primitives: ELABORATE to expand derived forms, and
-;; %UNLESS for IF to expand into.
+;; Scheme subset with LETREC restricted to LAMBDAs only, plus a
+;; primitives %UNLESS for IF to expand into.
 
 ;; Core syntax:
 ;; e = v
@@ -23,8 +22,6 @@
            (evaluate (caddr e)
                      (env-extend r (cadr e) arguments))))
         ((letrec)
-         ;; Specified to evaluate left-to-right with a definite
-         ;; 'uninitialized' value.
          (let ((new-r (env-extend-promises r (map car (cadr e)))))
            (for-each (lambda (defn)
                        (env-resolve! new-r
@@ -45,22 +42,20 @@
   (append (map list vs values) r))
 
 (define (env-extend-promises r vs)
-  (env-extend r vs (map (lambda (_) uninitialized) vs)))
+  (env-extend r vs (map (lambda (_) '*uninitialized*) vs)))
 
 (define (env-resolve! r v value)
   (cond ((assv v r) => (lambda (pair)
-                         (assert (eqv? (cadr pair) uninitialized) "WTF?" pair)
+                         (assert (eqv? (cadr pair) '*uninitialized*)
+                                 "WTF?" pair)
                          (set-car! (cdr pair) value)))
         (else (error '"Can't happen" v))))
-
-(define uninitialized (vector '*uninitialized*))
 
 (define (%unless test if-no if-yes)
   (if test if-yes if-no))
 
 (define the-global-env
-  `((uninitialized ,uninitialized)
-    (%unless     ,%unless)
+  `((%unless     ,%unless)
     (boolean?    ,boolean?)
     (number?     ,number?)
     (pair?       ,pair?)
