@@ -16,12 +16,19 @@
     ('lambda (mlambda ((_ vars . body)
                        `(lambda ,vars ,(elaborate-seq body)))))
     ('letrec (mlambda ((_ defns . body)
-                       `(letrec ,(map (mlambda ((v e) `(,v ,(elaborate e))))
+                       `(letrec ,(map (mlambda ((v e)
+                                                `(,v ,(elaborate-lambda e))))
                                       defns)
                           ,(elaborate-seq body)))))
     ('begin (mlambda ((_ . es)
                       (elaborate-seq es))))
     (_ #f)))
+
+(define (elaborate-lambda e)
+  (let ((e1 (elaborate e)))
+    (mcase e1
+      (('lambda _ _) e1)
+      (_ (error '"Non-lambda definition" e)))))
 
 (define (elaborate-seq es)
   (mcase es
