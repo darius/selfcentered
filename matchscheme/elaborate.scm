@@ -40,10 +40,10 @@
             `((lambda ,(map car bindings) . ,body)
               . ,(map cadr bindings)))))
     ('if (mlambda
-          ((_ test if-true)
-           `((%unless ,test (lambda () #f) (lambda () ,if-true))))
-          ((_ test if-true if-false)
-           `((%unless ,test (lambda () ,if-false) (lambda () ,if-true))))))
+          ((_ test if-so)
+           `((%unless ,test (lambda () #f) (lambda () ,if-so))))
+          ((_ test if-so if-not)
+           `((%unless ,test (lambda () ,if-not) (lambda () ,if-so))))))
     ('cond (mlambda
             ((_) #f)
             ((_ ('else . es)) `(begin . ,es))
