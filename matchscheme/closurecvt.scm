@@ -32,11 +32,11 @@
 
 (define (make-fix-env fs fvs)
   (lambda (v)
-    (or (lookup v fs '%proc-ref)
-        (lookup v fvs '%fv-ref)
+    (or (env-lookup v fs '%proc-ref)
+        (env-lookup v fvs '%fv-ref)
         v)))
 
-(define (lookup v vs operator)
+(define (env-lookup v vs operator)
   (local ((define (looking vs i)
             (mcase vs
               ('() #f)
