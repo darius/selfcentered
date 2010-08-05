@@ -47,7 +47,7 @@
 (define (env-resolve! r v value)
   (cond ((assv v r) => (lambda (pair)
                          (assert (eqv? (cadr pair) '*uninitialized*)
-                                 "WTF?" pair)
+                                 "Redefinition" pair)
                          (set-car! (cdr pair) value)))
         (else (error '"Can't happen" v))))
 
