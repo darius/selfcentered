@@ -34,4 +34,5 @@
                         ,(cc* es (lambda (xs)
                                    (c (cons x1 xs)))))))))))
 
-    (cc e (lambda (x) `(%halt ,x)))))
+    (cc e (let ((x (gensym)))
+            `(lambda (,x) (%halt ,x))))))
