@@ -1,11 +1,13 @@
 (local
 
  ((include "elaborate.scm")
+  (include "alphatize.scm")
+  (include "cps.scm")
   (include "closurecvt.scm")
   (include "stdlib.scm")
 
   (define (compile e)
-    (convert (elaborate (wrap e)) (lambda (v) v)))
+    (closure-convert (cps-convert (alphatize (elaborate (wrap e))))))
 
   (define (wrap e)
     `(let ((%unless     (lambda (x y z) (%prim %unless x y z)))
@@ -29,9 +31,10 @@
            (gensym      (lambda ()      (%prim gensym)))
            (read        (lambda ()      (%prim read)))
            (write       (lambda (x)     (%prim write x)))
-           (newline     (lambda ()      (%prim newline))))
+           (newline     (lambda ()      (%prim newline)))
+           (pp          (lambda ()      (%prim pp))))
        ,e))
   )
 
-(write (compile (read)))
+(pp (compile (read)))
 (newline))
