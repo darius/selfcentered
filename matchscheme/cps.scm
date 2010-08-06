@@ -20,10 +20,10 @@
                            defns)
                ,(cc body k)))
            (('%prim operator . operands)
-            (cc* operands (lambda (xs) `(%prim ,operator . ,xs)))))
+            (cc* operands (lambda (xs) `(%prim ,operator . ,xs))))
            ((operator . operands)
             (cc* (cons operator operands)
-                 (mlambda ((f . xs) `(,f ,k . ,xs))))))
+                 (mlambda ((f . xs) `(,f ,k . ,xs)))))))
 
        (define (cc* es c)
          (mcase es
