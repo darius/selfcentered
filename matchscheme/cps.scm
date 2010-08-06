@@ -35,4 +35,4 @@
                                    (c (cons x1 xs)))))))))))
 
     (cc e (let ((x (gensym)))
-            `(lambda (,x) (%halt ,x))))))
+            `(lambda (,x) (%prim %halt ,x))))))
