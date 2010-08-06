@@ -78,4 +78,5 @@
     (write       ,write)
     (newline     ,newline)
     (snarf       ,snarf)
+    (pp          ,pp)
     ))

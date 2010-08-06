@@ -68,7 +68,8 @@
            (read        ,(mlambda ('() (read))))
            (write       ,(mlambda ((x) (write x))))
            (newline     ,(mlambda ('() (newline))))
-           (snarf       ,(mlambda ((x) (snarf x)))))))
+           (snarf       ,(mlambda ((x) (snarf x))))
+           (pp          ,(mlambda ((x) (ppnarf x)))))))
 
   (include "elaborate.scm")
   (include "stdlib.scm")
