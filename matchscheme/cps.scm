@@ -17,8 +17,8 @@
                                               ,(cc fbody k1))))))
                            defns)
                ,(cc body k)))
-           (('%prim operator . operands)
-            (cc* operands (lambda (xs) `(%prim ,operator . ,xs))))
+           ((('%prim operator) . operands)
+            (cc* operands (lambda (xs) `((%prim ,operator) . ,xs))))
            ((operator . operands)
             (cc* (cons operator operands)
                  (mlambda ((f . xs) `(,f ,k . ,xs)))))))
@@ -33,4 +33,4 @@
                                    (c (cons x1 xs)))))))))))
 
     (cc e (let ((x (gensym)))
-            `(lambda (,x) (%prim %halt ,x))))))
+            `(lambda (,x) ((%prim %halt) ,x))))))

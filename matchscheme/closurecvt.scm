@@ -7,6 +7,7 @@
          (mcase e
            ((: v symbol?) (r v))
            (('quote datum) e)
+           (('%prim p) e)
            (('lambda vs body)
             (let ((fvs (free-vars e)))
               `(%enclose ,(map cvt fvs)
@@ -24,8 +25,6 @@
                   `(%enclose ,(map cvt fvs)
                              ,(convert body r)
                              . ,procs)))))
-           (('%prim prim . operands)
-            `(%prim ,prim . ,(map cvt operands)))
            ((('lambda vs body) . operands)
             `((lambda ,vs ,(cvt body)) . ,(map cvt operands)))
            ((operator . operands)
@@ -51,11 +50,11 @@
   (mcase e
     ((: v symbol?) `(,v))
     (('quote datum) '())
+    (('%prim p) '())
     (('lambda vs body) (set-diff (free-vars body) vs))
     (('letrec defns body)
      (set-diff (all-free-vars (cons body (map (mlambda ((f e) e)) defns)))
                (map (mlambda ((f e) f)) defns)))
-    (('%prim prim . operands) (all-free-vars operands))
     ((_ . _) (all-free-vars e))))
 
 (define (all-free-vars es)

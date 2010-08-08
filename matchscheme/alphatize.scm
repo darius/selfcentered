@@ -9,6 +9,7 @@
          (mcase e
            ((: v symbol?) (lookup v r))
            (('quote datum) e)
+           (('%prim p) e)
            (('lambda vs body)
             (let ((new-vs (map (lambda (v) (gensym)) vs)))
               `(lambda ,new-vs
@@ -20,8 +21,6 @@
                                          `(,(lookup f r) ,(alphatizing e r))))
                                defns)
                    ,(alphatizing body r)))))
-           (('%prim operator . operands)
-            `(%prim ,operator . ,(map alpha operands)))
            ((operator . operands)
             `(,(alpha operator) . ,(map alpha operands))))))
     (alpha e)))
