@@ -5,9 +5,7 @@
       ((define (cc e k)
          (mcase e
            ((: v symbol?) `(,k ,v))
-           (('quote datum)
-            (let ((x (gensym)))
-              `(%load ,e ,x (,k ,x))))
+           (('quote datum) `(,k ,e))
            (('lambda vs body)
             (let ((k1 (gensym)))
               `(,k (lambda (,k1 . ,vs)
