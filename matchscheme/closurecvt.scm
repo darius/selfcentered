@@ -26,6 +26,8 @@
                              . ,procs)))))
            (('%prim prim . operands)
             `(%prim ,prim . ,(map cvt operands)))
+           ((('lambda vs body) . operands)
+            `((lambda ,vs ,(cvt body)) . ,(map cvt operands)))
            ((operator . operands)
             `(,(cvt operator) . ,(map cvt operands))))))
     (cvt e)))
