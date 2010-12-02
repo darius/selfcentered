@@ -1,5 +1,5 @@
 ;; Scheme subset with LETREC restricted to LAMBDAs only, plus a
-;; primitives %UNLESS for IF to expand into.
+;; primitive %UNLESS for IF to expand into.
 
 ;; Core syntax:
 ;; e = v
