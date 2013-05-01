@@ -1,5 +1,6 @@
 """
 Compiler producing code using flat closures. 
+Needs: pip install peglet
 
 Probably ought to be revised with an Ocaml-style calling
 convention (push/enter) because of the O(N**2) pain of
