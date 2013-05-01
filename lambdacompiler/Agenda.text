@@ -1,0 +1,36 @@
+Add I/O. Proposal:
+
+A program transforms a list of input bits to a list of output
+bits. They're represented as ASCII 0/1 characters; an external filter
+encodes/decodes them into 8's.
+
+The bits are represented boolean true/false lambda terms, and the
+lists are Scott-encoded. So the input "01" is like (cons false (cons
+true nil)) where
+
+false = \x y. x    -- or maybe \x y. (x ignored_value) is more convenient
+true  = \x y. y    --    since we're doing call-by-value and expect x
+                   --    and y to be thunks
+
+cons = \h t on_nil on_cons. on_cons h t
+nil  = \on_nil on_cons. on_nil    -- same caveat as for 'false'
+
+So the interface to the interpreter must supply adaptors to/from the
+above procedural representation and actual 0/1 characters.
+
+
+Fancier proposal:
+
+The above doesn't give interactivity unless the user-programmer codes
+very carefully. We don't necessarily care, but monadic-style I/O would
+improve on that:
+
+A program evaluates to an 'action' value like
+
+\to_exit to_putbit to_getbit. to_exit -- the simplest terminating action
+
+Instead of to_exit, it could invoke
+  (to_getbit \bit. action)  -- bit is a boolean as in proposal #1
+or
+  (to_putbit true_or_false (\ignore. action))
+where action evaluates to another action value like the above.
