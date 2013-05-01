@@ -4,7 +4,7 @@ A program transforms a list of input bits to a list of output
 bits. They're represented as ASCII 0/1 characters; an external filter
 encodes/decodes them into 8's.
 
-The bits are represented boolean true/false lambda terms, and the
+The bits are represented by boolean true/false lambda terms, and the
 lists are Scott-encoded. So the input "01" is like (cons false (cons
 true nil)) where
 
