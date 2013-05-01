@@ -22,8 +22,8 @@ above procedural representation and actual 0/1 characters.
 Fancier proposal:
 
 The above doesn't give interactivity unless the user-programmer codes
-very carefully. We don't necessarily care, but monadic-style I/O would
-improve on that:
+very carefully. We don't necessarily care, but continuation-passing
+I/O would improve on that:
 
 A program evaluates to an 'action' value like
 
@@ -34,3 +34,5 @@ Instead of to_exit, it could invoke
 or
   (to_putbit true_or_false (\ignore. action))
 where action evaluates to another action value like the above.
+
+This is probably better -- not really more complicated, right?
