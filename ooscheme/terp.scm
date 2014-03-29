@@ -8,8 +8,31 @@
 ;;   | (LETREC ((v e) ...) e)
 ;;   | ((QUOTE selector) e e ...)    [call method of object]
 
+(define (run-load filename)
+  (call-with-input-file filename
+    (lambda (port)
+      (let loading ((form (read port)))
+        (cond ((not (eof-object? form))
+               (run form)
+               (loading (read port))))))))
+
+(define (run form)
+  (cond ((and (pair? form) (eq? (car form) 'define))
+         (run-define (cadr form) (cddr form)))
+        ((and (pair? form) (eq? (car form) 'load))
+         (run-load (cadr form)))
+        (else
+         (interpret form))))
+
+(define (run-define head body)
+  (define (def name e)
+    (set! the-global-env (cons (list name (interpret e)) the-global-env)))
+  (if (symbol? head)
+      (def head (car body))
+      (def (car head) `(lambda ,(cdr head) ,@body))))
+
 (define (interpret e)
-  (evaluate (elaborate e) the-global-env))
+  (evaluate (elaborate e) '()))
 
 (define (elaborate e)
   (cond ((symbol? e) e)
@@ -51,7 +74,8 @@
 
 (define (self-evaluating? x)
   (or (boolean? x)
-      (integer? x)))
+      (integer? x)
+      (string? x)))
 
 (define (elaborate-seq es)
   (make-begin (map elaborate es)))
@@ -151,6 +175,7 @@
 
 (define (env-lookup r v)
   (cond ((assq v r) => cadr)
+        ((assq v the-global-env) => cadr)
         (else (error "Unbound variable" v))))
 
 (define (env-extend r vs values)
@@ -259,9 +284,16 @@
                         (eqv? (object.datum x) (object.datum y)))))))
    '<eq?>))
 
+(define the-symbol?
+  (make-object
+   `((run ,(lambda (me x)
+             (wrap (eq? (object.script x) symbol-script)))))
+   '<symbol?>))
+
 (define the-global-env
   `((cons ,the-cons)
-    (eq? ,the-eq?)))
+    (eq? ,the-eq?)
+    (symbol? ,the-symbol?)))
 
 
 (should= (interpret '42)
