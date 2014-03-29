@@ -151,9 +151,7 @@
       (env-lookup r e)
       (case (car e)
         ((quote)
-         ;; (ELABORATE could do the wrap, but that'd make elaborated
-         ;; expressions less readable.)
-         (wrap (cadr e)))
+         (cadr e))
         ((make)
          (make-object (map (lambda (method)
                              (list (cadar method)
@@ -197,40 +195,39 @@
                          (set-car! (cdr pair) value)))
         (else (error "Can't happen" v))))
 
+(define object-tag (list '*object))
+
 (define (make-object script datum)
-  (list 'object script datum))
+  (list object-tag script datum))
 
 (define object.script cadr)
 (define object.datum caddr)
 
+(define (unwrap x receiver)
+  (cond ((boolean? x) (receiver boolean-script x))
+        ((fixnum? x)  (receiver fixnum-script x))
+        ((symbol? x)  (receiver symbol-script x))
+        ((null? x)    (receiver nil-script x))
+        ((vector? x)  (receiver vector-script x))
+        ((procedure? x) (receiver scheme-procedure-script x))
+        (else
+         (assert (pair? x) "Non-object" x)
+         (if (eq? (car x) object-tag)
+             (receiver (object.script x) (object.datum x))
+             (receiver pair-script x)))))
+
 (define (call object selector arguments)
-  (assert (eq? (car object) 'object) "Non-object" object)
-  (cond ((assq selector (object.script object))
-         => (lambda (pair)
-              (apply (cadr pair) (object.datum object) arguments)))
-        (else (error "No method found" selector object))))
+  (unwrap object
+          (lambda (script datum)
+            (cond ((assq selector script)
+                   => (lambda (pair)
+                        (apply (cadr pair) datum arguments)))
+                  (else (error "No method found" selector object))))))
 
-(define (wrap x)
-  ;; TODO: we also need some I/O primitives
-  (cond ((boolean? x) (make-object boolean-script x))
-        ((integer? x) (make-object fixnum-script x))
-        ((symbol? x) (make-object symbol-script x))
-        ((null? x) (make-object nil-script '()))
-        ((pair? x) (make-object pair-script (cons (wrap (car x))
-                                                  (wrap (cdr x)))))
-        ((vector? x) (make-object vector-script (vector-map wrap x)))
-        (else (error "Unknown primitive type" x))))
-
-(define (vector-map f vec)
-  (list->vector (map f (vector->list vec))))
-
-(define (unwrap script x)
-  (if (is-a? script x)
-      (object.datum x)
+(define (must-be ok? x)
+  (if (ok? x)
+      x
       (error "Bad argument type" x)))
-
-(define (is-a? script x)
-  (eq? (object.script x) script))
 
 (define uninitialized (make-object '() '*uninitialized*))
 
@@ -238,88 +235,81 @@
 ;; a concrete start.
 
 (define boolean-script
-  `((type ,(lambda (me) (wrap 'boolean)))
+  `((type ,(lambda (me) 'boolean))
     (choose ,(lambda (me if-true if-false)
                (call (if me if-true if-false) 'run '())))))
 
+(define fixnum? integer?)
+
 (define fixnum-script
-  `((type ,(lambda (me) (wrap 'fixnum)))
+  `((type ,(lambda (me) 'fixnum))
     ;; XXX Properly, should signal overflow. And we'd want versions
     ;;  that wrap around instead, under different selectors.
-    (+ ,(lambda (me x) (wrap (+ me (unwrap fixnum-script x)))))
-    (- ,(lambda (me x) (wrap (- me (unwrap fixnum-script x)))))
-    (* ,(lambda (me x) (wrap (* me (unwrap fixnum-script x)))))
-    (quotient ,(lambda (me x) (wrap (quotient me (unwrap fixnum-script x)))))
-    (remainder ,(lambda (me x) (wrap (remainder me (unwrap fixnum-script x)))))
-    (< ,(lambda (me x) (wrap (< me (unwrap fixnum-script x)))))
+    (+ ,(lambda (me x) (+ me (must-be fixnum? x))))
+    (- ,(lambda (me x) (- me (must-be fixnum? x))))
+    (* ,(lambda (me x) (* me (must-be fixnum? x))))
+    (quotient ,(lambda (me x) (quotient me (must-be fixnum? x))))
+    (remainder ,(lambda (me x) (remainder me (must-be fixnum? x))))
+    (< ,(lambda (me x) (< me (must-be fixnum? x))))
     ))
 
 (define symbol-script
-  `((type ,(lambda (me) (wrap 'symbol)))
+  `((type ,(lambda (me) 'symbol))
     (name ,(lambda (me)
-             (wrap (map char->integer (string->list (symbol->string me))))))))
+             (map char->integer (string->list (symbol->string me)))))))
 
 (define nil-script
-  `((type ,(lambda (me) (wrap 'nil)))))
+  `((type ,(lambda (me) 'nil))))
 
-;; XXX pairs don't really need to be primitive
+;; Pairs are primitive for the sake of nicely interfacing with the host language
 (define pair-script
-  `((type ,(lambda (me) (wrap 'pair)))
+  `((type ,(lambda (me) 'pair))
     (car ,car)
     (cdr ,cdr)))
 
 ;; NB for a compiler all we badly need is a mutable box type, not full vectors
 (define vector-script
-  `((type ,(lambda (me) (wrap 'vector)))
-    (length ,(lambda (me)
-               (wrap (vector-length me))))
+  `((type ,(lambda (me) 'vector))
+    (length ,vector-length me)
     (get ,(lambda (me i)
-            (vector-ref me (unwrap fixnum-script i))))
+            (vector-ref me (must-be fixnum? i))))
     (set ,(lambda (me i value)
-            (vector-set! me (unwrap fixnum-script i) value)
-            value))))
+            (vector-set! me (must-be fixnum? i) value)
+            #f))))
 
-(define the-cons
-  (make-object
-   `((run ,(lambda (me x y) (make-object pair-script (cons x y)))))
-   '<cons>))
+(define scheme-procedure-script
+  `((type ,(lambda (me) 'procedure))
+    (run ,(lambda (me . args) (apply me args)))))
 
-(define the-eq?
-  (make-object
-   `((run ,(lambda (me x y)
-             (wrap (and (eq? (object.script x) (object.script y))
-                        (eqv? (object.datum x) (object.datum y)))))))
-   '<eq?>))
-
-(define the-symbol?
-  (make-object
-   `((run ,(lambda (me x)
-             (wrap (eq? (object.script x) symbol-script)))))
-   '<symbol?>))
+(define (the-eq? x y)
+  (unwrap x (lambda (x-script x-datum)
+              (unwrap y (lambda (y-script y-datum)
+                          (and (eq? x-script y-script)
+                               (eqv? x-datum y-datum)))))))
 
 (define the-global-env
-  `((cons ,the-cons)
+  `((cons ,cons)
     (eq? ,the-eq?)
-    (symbol? ,the-symbol?)))
+    (symbol? ,symbol?)))
 
 
 (should= (interpret '42)
-         (wrap 42))
+         42)
 (should= (interpret 'cons)
-         the-cons)
+         cons)
 (should= (interpret '('- 5 3))
-         (wrap 2))
+         2)
 (should= (interpret '('car ('cdr '(hello world))))
-         (wrap 'world))
+         'world)
 (should= (interpret '('run (make ('run (x) x))
                            '55))
-         (wrap 55))
+         55)
 (should= (interpret '(let ((x (eq? 4 ('+ 2 2))))
                        x))
-         (wrap #t))
+         #t)
 (should= (interpret '(letrec ((fact (lambda (n)
                                       (if (eq? n 0)
                                           1
                                           ('* n (fact ('- n 1)))))))
                        (fact 5)))
-         (wrap 120))
+         120)
