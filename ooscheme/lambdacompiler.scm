@@ -7,8 +7,8 @@
       (if (eq? ('car lexp) 'lambda)
           (make-lam ('car ('car ('cdr lexp)))
                     (expand ('car ('cdr ('cdr lexp)))))
-          (make-app (expand ('car ('cdr lexp)))
-                    (expand ('car ('cdr ('cdr lexp))))))))
+          (make-app (expand ('car lexp))
+                    (expand ('car ('cdr lexp)))))))
 
 (define (symbol? x)
   (eq? ('type x) 'symbol))
