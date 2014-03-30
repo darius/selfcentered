@@ -252,6 +252,7 @@
     (quotient ,quotient)
     (remainder ,remainder)
     (< ,<)
+    (= ,=)
     ))
 
 (define symbol-script
