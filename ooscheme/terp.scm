@@ -79,11 +79,6 @@
                 (cons (car e) (map elaborate (cdr e)))
                 (cons ''run (map elaborate e))))))))  ; default selector
 
-(define (self-evaluating? x)
-  (or (boolean? x)
-      (integer? x)
-      (string? x)))
-
 (define (elaborate-seq es)
   (make-begin (map elaborate es)))
 
@@ -203,11 +198,19 @@
 (define object.script cadr)
 (define object.datum caddr)
 
+(define (self-evaluating? x)
+  (or (boolean? x)
+      (number? x)
+      (char? x)
+      (string? x)))
+
 (define (unwrap x receiver)
   (cond ((boolean? x) (receiver boolean-script x))
-        ((fixnum? x)  (receiver fixnum-script x))
+        ((number? x)  (receiver number-script x))
         ((symbol? x)  (receiver symbol-script x))
         ((null? x)    (receiver nil-script x))
+        ((char? x)    (receiver char-script x))
+        ((string? x)  (receiver string-script x))
         ((vector? x)  (receiver vector-script x))
         ((procedure? x) (receiver scheme-procedure-script x))
         (else
@@ -239,43 +242,47 @@
     (choose ,(lambda (me if-true if-false)
                (call (if me if-true if-false) 'run '())))))
 
-(define fixnum? integer?)
-
-(define fixnum-script
-  `((type ,(lambda (me) 'fixnum))
-    ;; XXX Properly, should signal overflow. And we'd want versions
-    ;;  that wrap around instead, under different selectors.
-    (+ ,(lambda (me x) (+ me (must-be fixnum? x))))
-    (- ,(lambda (me x) (- me (must-be fixnum? x))))
-    (* ,(lambda (me x) (* me (must-be fixnum? x))))
-    (quotient ,(lambda (me x) (quotient me (must-be fixnum? x))))
-    (remainder ,(lambda (me x) (remainder me (must-be fixnum? x))))
-    (< ,(lambda (me x) (< me (must-be fixnum? x))))
+;; XXX In a tiny self-hosting system we'd restrict numbers to fixnums.
+;; So, properly, these should signal overflow outside that range.
+(define number-script
+  `((type ,(lambda (me) 'number))
+    (+ ,+)
+    (- ,-)
+    (* ,*)
+    (quotient ,quotient)
+    (remainder ,remainder)
+    (< ,<)
     ))
 
 (define symbol-script
   `((type ,(lambda (me) 'symbol))
-    (name ,(lambda (me)
-             (map char->integer (string->list (symbol->string me)))))))
+    (name ,symbol->string)))
 
 (define nil-script
   `((type ,(lambda (me) 'nil))))
 
+(define char-script
+  `((type ,(lambda (me) 'char)))) 
+
 ;; Pairs are primitive for the sake of nicely interfacing with the host language
 (define pair-script
   `((type ,(lambda (me) 'pair))
-    (car ,car)
-    (cdr ,cdr)))
+    (car  ,car)
+    (cdr  ,cdr)))
+
+(define string-script
+  `((type   ,(lambda (me) 'string))
+    (length ,string-length)
+    (run    ,string-ref)))
 
 ;; NB for a compiler all we badly need is a mutable box type, not full vectors
 (define vector-script
-  `((type ,(lambda (me) 'vector))
-    (length ,vector-length me)
-    (get ,(lambda (me i)
-            (vector-ref me (must-be fixnum? i))))
-    (set ,(lambda (me i value)
-            (vector-set! me (must-be fixnum? i) value)
-            #f))))
+  `((type   ,(lambda (me) 'vector))
+    (length ,vector-length)
+    (run    ,vector-ref)
+    (put!   ,(lambda (me i value)
+               (vector-set! me i value)
+               #f))))
 
 (define scheme-procedure-script
   `((type ,(lambda (me) 'procedure))
