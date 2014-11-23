@@ -93,6 +93,12 @@
          ,e1
          (make ('run () ,e2))))
 
+(define (self-evaluating? x)
+  (or (boolean? x)
+      (number? x)
+      (char? x)
+      (string? x)))
+
 
 (define (assert ok? plaint culprit)
   (if (not ok?)
@@ -197,12 +203,6 @@
 
 (define object.script cadr)
 (define object.datum caddr)
-
-(define (self-evaluating? x)
-  (or (boolean? x)
-      (number? x)
-      (char? x)
-      (string? x)))
 
 (define (unwrap x receiver)
   (cond ((boolean? x) (receiver boolean-script x))
