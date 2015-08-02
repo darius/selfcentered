@@ -298,7 +298,9 @@
 (define the-global-env
   `((cons ,cons)
     (eq? ,the-eq?)
-    (symbol? ,symbol?)))
+    (symbol? ,symbol?)
+    (write ,write)
+    (newline ,newline)))
 
 
 (should= (interpret '42)
