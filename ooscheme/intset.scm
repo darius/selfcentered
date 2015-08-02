@@ -13,13 +13,25 @@
       s
       (make extension
         ('empty? ()  #f)
-        ('has? (k)   ('= n k))
+        ('has? (k)   (if ('= n k) #t ('has? s k)))
         ('adjoin (k) (make-adjoin k extension))
         ('merge (s)  (make-merge extension s)))))
 
 (define (make-merge s1 s2)
   (make meld
-    ('empty? ()  (and ('empty? s1) ('empty? s2)))
-    ('has? (k)   (or ('has? s1 k) ('has? s2 k)))
+    ('empty? ()  (if ('empty? s1) ('empty? s2) #f))
+    ('has? (k)   (if ('has? s1 k) #t ('has? s2 k)))
     ('adjoin (k) (make-adjoin k meld))
     ('merge (s)  (make-merge meld s))))
+
+;; Smoke test
+
+(define (print x)
+  (write x)
+  (newline))
+
+(define eg ('adjoin ('adjoin empty 6) 5))
+
+(print ('has? eg 5))
+(print ('has? eg 6))
+(print ('has? eg 7))
