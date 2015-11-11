@@ -79,9 +79,9 @@
 
 (define (expand-defn defn expanded-defns)
   (mcase defn
-    ((_ (: name symbol?) e)
+    (('define (: name symbol?) e)
      `((,name ,e) . ,expanded-defns))
-    ((_ (name . vars) . body)
+    (('define (name . vars) . body)
      `((,name (lambda ,vars . ,body)) . ,expanded-defns))
     (('include filename)
      (mcase (snarf filename)
