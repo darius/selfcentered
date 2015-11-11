@@ -34,40 +34,32 @@ class Add1(object):
 
 ## testcomp(r'0')
 #. ['zero', 'halt']
-#. 
 #. 0L
 
 ## testcomp(r'+1 0')
 #. ['save', 7, 'zero', 'defer', 0, 2, 'add1', 'restore', 'invoke', 'halt']
-#. 
 #. 1L
 
 ## testcomp(r'(\x.x)(+1 0)')
 #. ['save', 15, 'save', 7, 'zero', 'defer', 0, 2, 'add1', 'restore', 'invoke', 'defer', 0, 2, 'arg', 'restore', 'invoke', 'halt']
-#. 
 #. 1L
 ## testcomp(r'(\f.f)(+1) 0')
 #. ['save', 15, 'zero', 'save', 11, 'defer', 0, 2, 'add1', 'restore', 'defer', 0, 2, 'arg', 'restore', 'invoke', 'invoke', 'halt']
-#. 
 #. 1L
 
 ## testcomp(r'(\x y. x) (+1 0) 0')
 #. ['save', 24, 'zero', 'save', 20, 'save', 7, 'zero', 'defer', 0, 2, 'add1', 'restore', 'invoke', 'defer', 0, 7, 'defer', 1, 2, 'arg', 1, 'restore', 'restore', 'invoke', 'invoke', 'halt']
-#. 
 #. 1L
 ## testcomp(r'(\x y. y) (+1 0) 0')
 #. ['save', 23, 'zero', 'save', 19, 'save', 7, 'zero', 'defer', 0, 2, 'add1', 'restore', 'invoke', 'defer', 0, 6, 'defer', 0, 2, 'arg', 'restore', 'restore', 'invoke', 'invoke', 'halt']
-#. 
 #. 0L
 
 ## testcomp(r'(\f x. x) +1 0')
 #. ['save', 19, 'zero', 'save', 15, 'defer', 0, 2, 'add1', 'restore', 'defer', 0, 6, 'defer', 0, 2, 'arg', 'restore', 'restore', 'invoke', 'invoke', 'halt']
-#. 
 #. 0L
 
 ## testcomp(r'(\f x. f x) (+1) 0')
 #. ['save', 21, 'zero', 'save', 17, 'defer', 0, 2, 'add1', 'restore', 'defer', 0, 8, 'defer', 1, 3, 'arg', 'arg', 1, 'invoke', 'restore', 'invoke', 'invoke', 'halt']
-#. 
 #. 1L
 
 ## one   = r'\f x. f x'
@@ -82,12 +74,10 @@ class Add1(object):
 #. (\m n f. n (m f)) ((\m n f x. n f (m f x)) (\f x. f x) (\f x. f (f x))) (\f x. f (f x))  +1 0
 ## testcomp(blarg)
 #. ['save', 120, 'zero', 'save', 116, 'defer', 0, 2, 'add1', 'restore', 'save', 108, 'defer', 0, 12, 'defer', 1, 7, 'arg', 'save', 3, 'arg', 1, 'invoke', 1, 'invoke', 'restore', 'save', 90, 'save', 66, 'defer', 0, 12, 'defer', 1, 7, 'arg', 'save', 3, 'arg', 1, 'invoke', 1, 'invoke', 'restore', 'save', 48, 'defer', 0, 8, 'defer', 1, 3, 'arg', 'arg', 1, 'invoke', 'restore', 'defer', 0, 33, 'defer', 1, 28, 'arg', 'defer', 2, 22, 1, 'arg', 'defer', 3, 15, 'arg', 1, 2, 'save', 7, 'arg', 'save', 3, 1, 2, 'invoke', 'invoke', 'save', 3, 1, 3, 'invoke', 'invoke', 'restore', 'restore', 'restore', 'invoke', 'invoke', 'defer', 0, 18, 'defer', 1, 13, 'arg', 'defer', 2, 7, 1, 'arg', 'save', 3, 'arg', 1, 'invoke', 2, 'invoke', 'restore', 'restore', 'invoke', 'invoke', 'invoke', 'invoke', 'halt']
-#. 
 #. 6L
 
 ## testcomp(r'$Y (\fact n. ($is_zero n (\_. $one) (\_. ($mul n (fact ($sub1 n))))) n) ($add $two $two) +1 0')
 #. ['save', 323, 'zero', 'save', 319, 'defer', 0, 2, 'add1', 'restore', 'save', 311, 'save', 70, 'defer', 0, 12, 'defer', 1, 7, 'arg', 'save', 3, 'arg', 1, 'invoke', 1, 'invoke', 'restore', 'save', 52, 'defer', 0, 12, 'defer', 1, 7, 'arg', 'save', 3, 'arg', 1, 'invoke', 1, 'invoke', 'restore', 'defer', 0, 33, 'defer', 1, 28, 'arg', 'defer', 2, 22, 1, 'arg', 'defer', 3, 15, 'arg', 1, 2, 'save', 7, 'arg', 'save', 3, 1, 2, 'invoke', 'invoke', 'save', 3, 1, 3, 'invoke', 'invoke', 'restore', 'restore', 'restore', 'invoke', 'invoke', 'save', 236, 'defer', 0, 194, 'defer', 1, 189, 'arg', 'arg', 'save', 185, 'defer', 2, 126, 1, 'arg', 'save', 98, 'save', 94, 2, 'defer', 0, 89, 'defer', 1, 84, 'arg', 'defer', 2, 78, 1, 'arg', 'defer', 0, 6, 'defer', 0, 2, 'arg', 'restore', 'restore', 'save', 66, 'defer', 1, 11, 'arg', 1, 'save', 7, 'defer', 0, 2, 'arg', 'restore', 'arg', 'invoke', 'invoke', 'save', 48, 'defer', 1, 42, 2, 'defer', 2, 36, 'arg', 1, 'save', 28, 'save', 11, 'defer', 0, 6, 'defer', 0, 2, 'arg', 'restore', 'restore', 1, 'invoke', 'save', 12, 'defer', 0, 7, 'defer', 1, 2, 'arg', 1, 'restore', 'restore', 1, 'invoke', 'invoke', 'save', 3, 2, 'arg', 'invoke', 'invoke', 'restore', 1, 'invoke', 'invoke', 'invoke', 'restore', 'restore', 'invoke', 1, 'invoke', 'save', 23, 2, 'defer', 0, 18, 'defer', 1, 13, 'arg', 'defer', 2, 7, 1, 'arg', 'save', 3, 'arg', 1, 'invoke', 2, 'invoke', 'restore', 'restore', 'invoke', 'invoke', 'save', 51, 'defer', 0, 12, 'defer', 0, 8, 'defer', 1, 3, 'arg', 'arg', 1, 'invoke', 'restore', 'restore', 'save', 33, 'arg', 'defer', 0, 28, 'defer', 0, 7, 'defer', 1, 2, 'arg', 1, 'restore', 'restore', 'save', 15, 'defer', 0, 10, 'defer', 0, 6, 'defer', 0, 2, 'arg', 'restore', 'restore', 'restore', 'arg', 'invoke', 'invoke', 'invoke', 'invoke', 'invoke', 'invoke', 'restore', 'defer', 0, 35, 'defer', 1, 13, 'arg', 'defer', 1, 7, 'arg', 'arg', 'save', 3, 1, 1, 'invoke', 'invoke', 1, 'invoke', 'defer', 1, 13, 'arg', 'defer', 1, 7, 'arg', 'arg', 'save', 3, 1, 1, 'invoke', 'invoke', 1, 'invoke', 'invoke', 'invoke', 'invoke', 'invoke', 'invoke', 'halt']
-#. 
 #. 24L
 
 def run(insns):
