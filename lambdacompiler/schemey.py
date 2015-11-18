@@ -65,9 +65,13 @@ class Var(object):
     def free_vars(self):
         return (self.name,)
     def eval(self, r, k):
-        return k, r[self.name]
+        return k, fetch_by_name(r, self.name)
     def __repr__(self):
         return self.name
+
+def fetch_by_name((arg, closure), name):
+    at = closure.lookup(name)
+    return arg if at == 'arg' else closure.fetch(at)
 
 class Lam(object):
     def __init__(self, param, body):
@@ -77,20 +81,27 @@ class Lam(object):
     def free_vars(self):
         return self.fvs
     def eval(self, r, k):
-        return k, Closure(self, tuple(r[v] for v in self.fvs))
-    def run(self, arg, closure_values, k):
-        return self.body.eval(make_env((self.param,) + self.fvs,
-                                       (arg,) + closure_values),
-                              k)
+        return k, Closure(self, tuple(fetch_by_name(r, v) for v in self.fvs))
     def __repr__(self):
         return '(%s -> %r)' % (self.param, self.body)
+    def run(self, r, k):
+        return self.body.eval(r, k)
+    def lookup(self, name):
+        if name == self.param:
+            return 'arg'
+        else:
+            return self.fvs.index(name)
 
 class Closure(object):
     def __init__(self, lam, values):
         self.lam = lam
         self.values = values
+    def lookup(self, name):
+        return self.lam.lookup(name)
+    def fetch(self, at):
+        return self.values[at]
     def call(self, arg, k):
-        return self.lam.run(arg, self.values, k)
+        return self.lam.run((arg, self), k)
     def __repr__(self):
         return '<%r: %s>' % (self.lam, ' '.join(map(repr, self.values)))
 
@@ -123,13 +134,7 @@ class CallK(object):
         return 'CallK(%r)' % (self.fn)
 
 
-def make_env(names, values):
-    return dict(zip(names, values))
-
-
-def run(expr):
-    return expr.eval(global_r, final_k)
-
+# Primitive functions
 
 class Primitive2(object):
     def __init__(self, fn):
@@ -156,7 +161,7 @@ no_prim  = Primitive2(no)
 
 def equ(x, y): return yes_prim if x == y else no_prim
 
-global_r = {
+global_dict = {
     '+':   Primitive2(operator.add),
     '-':   Primitive2(operator.sub),
     '*':   Primitive2(operator.mul),
@@ -164,6 +169,13 @@ global_r = {
     'yes': yes_prim,
     'no':  no_prim,
 }
+
+global_lam = Lam('', Var(''))
+global_lam.fvs = tuple(global_dict.keys())
+global_r = (None, Closure(global_lam, tuple(global_dict.values())))
+
+def run(expr):
+    return expr.eval(global_r, final_k)
 
 
 # Parsing
