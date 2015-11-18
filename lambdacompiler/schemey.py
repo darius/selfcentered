@@ -27,13 +27,12 @@ import operator
 
 # The trampoline
 
-loud = 1
+loud = 0
 
 def trampoline(state):
     k, value = state
     while k is not final_k:
         if loud: traceback((k, value))
-        print 'k', k
         fn, k = k
         k, value = fn(value, k)
     return value
@@ -119,7 +118,7 @@ class CallK(object):
     def __init__(self, fn):
         self.fn = fn
     def __call__(self, arg, k):
-        return self.fn(arg, k)
+        return self.fn.call(arg, k)
     def __repr__(self):
         return 'CallK(%r)' % (self.fn)
 
@@ -135,7 +134,7 @@ def run(expr):
 class Primitive2(object):
     def __init__(self, fn):
         self.fn = fn
-    def __call__(self, arg, k):
+    def call(self, arg, k):
         return k, PartialPrimitive2(self.fn, arg)
     def __repr__(self):
         return self.fn.__name__
@@ -144,7 +143,7 @@ class PartialPrimitive2(object):
     def __init__(self, fn, arg1):
         self.fn = fn
         self.arg1 = arg1
-    def __call__(self, arg, k):
+    def call(self, arg, k):
         return k, self.fn(self.arg1, arg)
     def __repr__(self):
         return '(%s %r)' % (self.fn.__name__, self.arg1)
@@ -152,15 +151,18 @@ class PartialPrimitive2(object):
 def yes(if_yes, if_no): return if_yes
 def no(if_yes, if_no):  return if_no
 
-def equ(x, y): return yes if x == y else no
+yes_prim = Primitive2(yes)
+no_prim  = Primitive2(no)
+
+def equ(x, y): return yes_prim if x == y else no_prim
 
 global_r = {
     '+':   Primitive2(operator.add),
     '-':   Primitive2(operator.sub),
     '*':   Primitive2(operator.mul),
     '=':   Primitive2(equ),
-    'yes': Primitive2(yes),
-    'no':  Primitive2(no),
+    'yes': yes_prim,
+    'no':  no_prim,
 }
 
 
@@ -204,18 +206,25 @@ def test(x, loud=True):
     return result
 
 ## test(r'+ 2 3')
-#. : add
-#. RandK(2,...)
-#. RandK(3,...)
-#. k (RandK(2,...), (RandK(3,...), None))
-#. : 2
-#. CallK(add)
-#. RandK(3,...)
-#. k (CallK(add), (RandK(3,...), None))
-#. : (add 2)
-#. RandK(3,...)
-#. k (RandK(3,...), None)
-#. : 3
-#. CallK((add 2))
-#. k (CallK((add 2)), None)
 #. 5
+
+## test(r'(\x.x)42')
+#. 42
+## test(r'((\x y.x y y) (+) 8)')
+#. 16
+## test(r'(\x . x) +')
+#. add
+## test(r'(\x y. x y y) = 5')
+#. yes
+## test(r'(= 5 6) 42 137')
+#. 137
+## test(r'(= 5 5) 42 137')
+#. 42
+
+Y    = r'\M. (\f. M (\a. f f a)) (\f. M (\a. f f a))'
+fact = r"""Y (\fact n p. ((= n 0) (\_. p) (\_. fact (- n 1) (* p n)) 0)) 5 1"""
+fancy_test = r'(\Y.%s)(%s)' % (fact, Y)
+## fancy_test
+#. '(\\Y.Y (\\fact n p. ((= n 0) (\\_. p) (\\_. fact (- n 1) (* p n)) 0)) 5 1)(\\M. (\\f. M (\\a. f f a)) (\\f. M (\\a. f f a)))'
+## test(fancy_test)
+#. 120
