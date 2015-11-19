@@ -133,6 +133,17 @@ class CallK(object):
     def __repr__(self):
         return 'CallK(%r)' % (self.fn)
 
+class Loop(object):
+    "Mark where to start trace recording."
+    def __init__(self, expr):
+        self.expr = expr
+    def free_vars(self):
+        return self.expr.free_vars()
+    def eval(self, r, k):
+        return self.expr.eval(r, k)
+    def __repr__(self):
+        return '(LOOP %r)' % (self.expr)
+
 
 # Primitive functions
 
@@ -190,7 +201,8 @@ def foldr(f, z, xs):
 
 parse = Parser(r"""
 start = _ e !.
-e     = f fs              fold_app
+e     = /LOOP\b/ _ e      Loop
+      | f fs              fold_app
 fs    = f fs
       |     
 f     = v                 Var
@@ -234,9 +246,9 @@ def test(x, loud=True):
 #. 42
 
 Y    = r'\M. (\f. M (\a. f f a)) (\f. M (\a. f f a))'
-fact = r"""Y (\fact n p. ((= n 0) (\_. p) (\_. fact (- n 1) (* p n)) 0)) 5 1"""
+fact = r"""Y (\fact n p. LOOP ((= n 0) (\_. p) (\_. fact (- n 1) (* p n)) 0)) 5 1"""
 fancy_test = r'(\Y.%s)(%s)' % (fact, Y)
 ## fancy_test
-#. '(\\Y.Y (\\fact n p. ((= n 0) (\\_. p) (\\_. fact (- n 1) (* p n)) 0)) 5 1)(\\M. (\\f. M (\\a. f f a)) (\\f. M (\\a. f f a)))'
+#. '(\\Y.Y (\\fact n p. LOOP ((= n 0) (\\_. p) (\\_. fact (- n 1) (* p n)) 0)) 5 1)(\\M. (\\f. M (\\a. f f a)) (\\f. M (\\a. f f a)))'
 ## test(fancy_test)
 #. 120
