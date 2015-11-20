@@ -55,6 +55,7 @@ class Const(object):
     def free_vars(self):
         return ()
     def eval(self, r, k):
+        tracer.add('constant', self.value)
         return k, self.value
     def __repr__(self):
         return repr(self.value)
@@ -64,8 +65,14 @@ class Var(object):
         self.name = name
     def free_vars(self):
         return (self.name,)
-    def eval(self, r, k):
-        return k, fetch_by_name(r, self.name)
+    def eval(self, (arg, closure), k):
+        at = closure.lookup(self.name)
+        if at == 'arg':
+            tracer.add('arg')
+            return k, arg
+        else:
+            tracer.add('closure_fetch', at)
+            return k, closure.fetch(at)
     def __repr__(self):
         return self.name
 
@@ -81,6 +88,7 @@ class Lam(object):
     def free_vars(self):
         return self.fvs
     def eval(self, r, k):
+        tracer.add('enclose', self, *[tracer.fetch_by_name(r, name) for name in self.fvs])
         return k, Closure(self, tuple(fetch_by_name(r, v) for v in self.fvs))
     def __repr__(self):
         return '(%s -> %r)' % (self.param, self.body)
@@ -129,6 +137,7 @@ class CallK(object):
     def __init__(self, fn):
         self.fn = fn
     def step(self, arg, k):
+        tracer.add('call')      # XXX
         return self.fn.call(arg, k)
     def __repr__(self):
         return 'CallK(%r)' % (self.fn)
@@ -137,9 +146,17 @@ class Loop(object):
     "Mark where to start trace recording."
     def __init__(self, expr):
         self.expr = expr
+        self.compiled_code = None
     def free_vars(self):
         return self.expr.free_vars()
     def eval(self, r, k):
+        if self.compiled_code:
+            return run_compiled(self.compiled_code, r, k)
+        if tracer.tracing:
+            self.compiled_code = tracer.stop()
+            if self.compiled_code:
+                return run_compiled(self.compiled_code, r, k)
+        tracer.start(k)
         return self.expr.eval(r, k)
     def __repr__(self):
         return '(LOOP %r)' % (self.expr)
@@ -151,6 +168,7 @@ class Primitive2(object):
     def __init__(self, fn):
         self.fn = fn
     def call(self, arg, k):
+        tracer.add('partial2') # XXX
         return k, PartialPrimitive2(self.fn, arg)
     def __repr__(self):
         return self.fn.__name__
@@ -160,6 +178,7 @@ class PartialPrimitive2(object):
         self.fn = fn
         self.arg1 = arg1
     def call(self, arg, k):
+        tracer.add('prim', self.fn.__name__) # XXX
         return k, self.fn(self.arg1, arg)
     def __repr__(self):
         return '(%s %r)' % (self.fn.__name__, self.arg1)
@@ -185,7 +204,35 @@ global_lam = Lam('', Var(''))
 global_lam.fvs = tuple(global_dict.keys())
 global_r = (None, Closure(global_lam, tuple(global_dict.values())))
 
+
+# Trace recording
+
+class Tracer(object):
+    def __init__(self):
+        self.tracing = False
+    def start(self, k):
+        self.tracing = True
+        self.insns = []
+        self.start_k = k
+    def stop(self):
+        self.tracing = False
+        return None
+    def add(self, *insn):
+        if self.tracing:
+            self.insns.append(insn)
+            return len(self.insns) - 1
+        return None
+    def fetch_by_name(self, (arg, closure), name):
+        at = closure.lookup(name)
+        return self.add('arg') if at == 'arg' else self.add('closure_fetch', at)
+
+tracer = Tracer()
+
+
+# Entry point
+
 def run(expr):
+    tracer.tracing = False
     return expr.eval(global_r, final_k)
 
 
@@ -252,3 +299,26 @@ fancy_test = r'(\Y.%s)(%s)' % (fact, Y)
 #. '(\\Y.Y (\\fact n p. LOOP ((= n 0) (\\_. p) (\\_. fact (- n 1) (* p n)) 0)) 5 1)(\\M. (\\f. M (\\a. f f a)) (\\f. M (\\a. f f a)))'
 ## test(fancy_test)
 #. 120
+## for i, insn in enumerate(tracer.insns): print i, insn
+#. 0 ('closure_fetch', 0)
+#. 1 ('closure_fetch', 4)
+#. 2 ('call',)
+#. 3 ('partial2',)
+#. 4 ('constant', 0)
+#. 5 ('call',)
+#. 6 ('prim', 'equ')
+#. 7 ('arg',)
+#. 8 ('enclose', (_ -> p), 7)
+#. 9 ('call',)
+#. 10 ('partial2',)
+#. 11 ('arg',)
+#. 12 ('closure_fetch', 1)
+#. 13 ('closure_fetch', 2)
+#. 14 ('closure_fetch', 3)
+#. 15 ('closure_fetch', 4)
+#. 16 ('enclose', (_ -> ((fact ((- n) 1)) ((* p) n))), 11, 12, 13, 14, 15)
+#. 17 ('call',)
+#. 18 ('prim', 'yes')
+#. 19 ('constant', 0)
+#. 20 ('call',)
+#. 21 ('closure_fetch', 0)
