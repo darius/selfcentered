@@ -33,8 +33,8 @@ def trampoline(state):
     k, value = state
     while k is not final_k:
         if loud: traceback((k, value))
-        fn, k = k
-        k, value = fn(value, k)
+        cont_step, k = k
+        k, value = cont_step.step(value, k)
     return value
 
 final_k = None
@@ -43,8 +43,8 @@ def traceback(state):
     k, value = state
     print ':', repr(value)
     while k:
-        fn, k = k
-        print repr(fn)
+        cont_step, k = k
+        print repr(cont_step)
 
 
 # Abstract syntax
@@ -120,7 +120,7 @@ class RandK(object):
     def __init__(self, rand, r):
         self.rand = rand
         self.r = r
-    def __call__(self, fn, k):
+    def step(self, fn, k):
         return self.rand.eval(self.r, (CallK(fn), k))
     def __repr__(self):
         return 'RandK(%r,...)' % (self.rand,)
@@ -128,7 +128,7 @@ class RandK(object):
 class CallK(object):
     def __init__(self, fn):
         self.fn = fn
-    def __call__(self, arg, k):
+    def step(self, arg, k):
         return self.fn.call(arg, k)
     def __repr__(self):
         return 'CallK(%r)' % (self.fn)
