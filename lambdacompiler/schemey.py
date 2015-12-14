@@ -2,7 +2,7 @@
 A more Scheme-like variant. Call by value, multiple arguments, some
 other primitive datatypes.
 
-e = x | c | (lambda (x*) e) | (e e*)
+e = x | c | (lambda (x) e) | (e e)
 c = number | + | - | * | =
 
 booleans are functions, though.
@@ -82,7 +82,7 @@ class Lam(object):
     def __init__(self, param, body):
         self.param = param
         self.body = body
-        self.fvs = tuple(set(body.free_vars()) - set([param]))
+        self.fvs = tuple(v for v in body.free_vars() if v != param)
     def free_vars(self):
         return self.fvs
     def eval(self, r, k):
@@ -119,7 +119,7 @@ class App(object):
         self.rator = rator
         self.rand = rand
     def free_vars(self):
-        return tuple(set(self.rator.free_vars()) | set(self.rand.free_vars()))
+        return tuple(set(self.rator.free_vars() + self.rand.free_vars()))
     def eval(self, r, k):
         return self.rator.eval(r, (RandK(self.rand, r), k))
     def __repr__(self):
@@ -307,8 +307,8 @@ fancy_test = r'(\Y.%s)(%s)' % (fact, Y)
 ## test(fancy_test)
 #. 120
 ## for i, insn in enumerate(tracer.insns): print i, insn
-#. 0 ('closure_fetch', 0, '=')
-#. 1 ('closure_fetch', 4, 'n')
+#. 0 ('closure_fetch', 3, '=')
+#. 1 ('closure_fetch', 2, 'n')
 #. 2 ('insist', 0, equ)
 #. 3 ('partial2', 'equ', 1)
 #. 4 ('constant', 0)
@@ -319,10 +319,10 @@ fancy_test = r'(\Y.%s)(%s)' % (fact, Y)
 #. 9 ('insist', 6, yes)
 #. 10 ('partial2', 'yes', 8)
 #. 11 ('arg', 'p')
-#. 12 ('closure_fetch', 1, '*')
-#. 13 ('closure_fetch', 2, '-')
-#. 14 ('closure_fetch', 3, 'fact')
-#. 15 ('closure_fetch', 4, 'n')
+#. 12 ('closure_fetch', 0, '*')
+#. 13 ('closure_fetch', 1, '-')
+#. 14 ('closure_fetch', 4, 'fact')
+#. 15 ('closure_fetch', 2, 'n')
 #. 16 ('enclose', (_ -> ((fact ((- n) 1)) ((* p) n))), 11, 12, 13, 14, 15)
 #. 17 ('insist', 10, (yes <(_ -> p): 120>))
 #. 18 ('prim', 'yes', 8, 16)
